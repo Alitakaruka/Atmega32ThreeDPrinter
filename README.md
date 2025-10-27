@@ -49,7 +49,7 @@ make
 
 - ARM GCC Toolchain
 - Make
-- STM32 микроконтроллер
+- AVR atmega 32 / arduino nano / arduino uno микроконтроллер
 
 ## Прошивка
 
