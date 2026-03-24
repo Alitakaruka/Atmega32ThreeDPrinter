@@ -21,8 +21,6 @@
 #define GetBaseInformation   "&_"
 #define Check                "*_"
 #define GetTemps             "M105"
-#define NowTemperatureBed    "B:"
-#define NowTemperatureNozzle "N:"
 #define ReadyToRead          "R_"
 #define BuffercommandSize     "S_"
 #define GetADCValue     "(_" 

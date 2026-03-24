@@ -28,7 +28,7 @@ typedef struct
 }Buffio;
 
 
-    static uint8_t Buffio_isEmpty(Buffio* buffio)  { return buffio->readPos == buffio->writePos; }
+    volatile static uint8_t Buffio_isEmpty(Buffio* buffio)  { return buffio->readPos == buffio->writePos; }
     static uint8_t Buffio_isFull(Buffio* buffio)  { return ((buffio->writePos + 1) % commandsBufferSize) == buffio->readPos; }
 
     static size_t Buffio_available(Buffio* buffio)  {

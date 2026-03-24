@@ -1,6 +1,6 @@
 #include "3D_Control.h"
 
-volatile ThreeD_Printer *iPrinter = NULL;
+ ThreeD_Printer volatile *iPrinter = NULL;
 
 volatile uint16_t TCNT1A_X = 0;
 volatile uint16_t TCNT1B_Y = 0;
@@ -35,9 +35,6 @@ void setup_printer()
      }
      memset((void *)iPrinter, 0, sizeof(ThreeD_Printer));
 
-          UART_printf("R%d\n",iPrinter->buffio.readPos);
-     UART_printf("w%d\n",iPrinter->buffio.writePos);
-
      iPrinter->NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
      iPrinter->BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
      iPrinter->flow = 1.0;
@@ -68,7 +65,6 @@ void setup_printer()
      iPrinter->fan2 = 255; // radiator fan is enable (M106 && M107 control him)
      // For user
      blickLight(0, 255, 0); //
-     UART_printf("Printer setup sucses!");
      //
      set_light(255, 255, 255);
 }
@@ -78,23 +74,16 @@ void printer_serve()
      char CurrentCommand[128] = {};
      while (1)
      {
-          // UART_printf("BufferData: %s",Buffio_allBuffer(&iPrinter->buffio));
-          // _delay_ms(1000);
-          // UART_printf("Empty %d,\n",Buffio_isEmpty(&iPrinter->buffio));
-     //           UART_printf("R%d\n",iPrinter->buffio.readPos);
-     // UART_printf("w%d\n",iPrinter->buffio.writePos);
-     _delay_us(1);
-          if (!Buffio_isEmpty(&(iPrinter->buffio)))
-          {
-               UART_printf("Non empty\n");
+          if (!Buffio_isEmpty(&(iPrinter->buffio))){
                if (!Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
-                               sizeof(CurrentCommand), EndOfData)){
-                                   error("Max command len error!");
-                               } 
+                    sizeof(CurrentCommand), EndOfData)){
+                    error("Max command len error!");
+               } 
                execute_command(CurrentCommand);
                UART_send_command(EndOfData, ACK);
           }else{
-               
+               //asm("nop");//Отче наш я же си на небеси. Да светится имя твое да будет царствие твое до будет воля твОя 
+               Await();
           }
      }
 }
@@ -562,14 +551,8 @@ void send_base_inforamtion()
      // UART_send_command(EndOfData, M_MaxBufferSize, 8);
 }
 
-void send_all_information()
+void send_cur_information()
 {
-     // PrinterData
-     //  UART_send_command(EndOfData,M_Name,PrinterName);
-     //  UART_send_command(EndOfData,M_Version,S_Version);
-     //  UART_send_command(EndOfData,M_Type, PrinterType);
-
-     // XYZ
      UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
      UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
      UART_send_command(EndOfData, M_PositionZ, iPrinter->CurrentPosition.Z);
@@ -577,10 +560,7 @@ void send_all_information()
      UART_send_command(EndOfData, M_TemperatureBed, iPrinter->tempBed);
      UART_send_command(EndOfData, M_TemperatureNozzle, iPrinter->tempNozzle);
 }
-// void send_temperatures(){
-//      UART_send_command(EndOfData,MTemperatureBed,iPrinter->tempBed);
-//      UART_send_command(EndOfData,MTemperatureNozzle,iPrinter->tempNozzle);
-// }
+
 
 inline void execute_GCode(const char *command)
 {
@@ -766,27 +746,10 @@ void Await()
      if (iPrinter->Flags & (1 << FlagUARTTimeOut) != 0)
      {
           // UART_send_command(EndOfData,CommandImHere);
-          send_all_information();
+          send_cur_information();
           iPrinter->Flags &= ~(1 << FlagUARTTimeOut);
           UATRTimeOut = 0;
      }
-     // if(iPrinter->Flags & (1 << FlagUpdateTemps)){
-     //      UpdateTemps();
-     //      iPrinter->Flags &= ~(1 <<FlagUpdateTemps);
-     // }
-
-     // if(iPrinter->Flags &(1 << FlagXstep)){
-     //      handle_X();
-     // }
-     // if(iPrinter->Flags &(1 << FlagYstep)){
-     //      handle_Y();
-     // }
-     // if(iPrinter->Flags &(1 << FlagZstep)){
-     //      handle_Z();
-     // }
-     // if(iPrinter->Flags &(1 << FlagEstep)){
-     //      handle_E();
-     // }
 }
 
 void move_to(float X, float Y, float Z, float E, int speedMMS)
