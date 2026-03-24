@@ -91,12 +91,12 @@ int parse_int_from_string(const char* str){
     return string_to_int(buffer);
 }
 
-void deleteSplit(const char** arrStrs){
-    for (char** strs = arrStrs; *strs != NULL; strs++){
-        free(*strs);
-    }
-    free(arrStrs);
-}
+// void deleteSplit(const char** arrStrs){
+//     for (char** strs = arrStrs; *strs != NULL; strs++){
+//         free(*strs);
+//     }
+//     free(arrStrs);
+// }
 
 int freeRam() {
     extern char __stack;

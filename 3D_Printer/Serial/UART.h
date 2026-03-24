@@ -4,6 +4,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
+#include "Service/Service.h"
 //#include "3D_Printer/Configuration.h"
 
 #define RX PORTD0
@@ -23,5 +24,5 @@ void UART_send_byte(char byte);
 void UART_send_message(const char* message);
 void UART_printf(const char* formatstr, ...);
 void UART_println(const char* formatstr, ...);
-void UART_send_command(char postfix,const char* formatstr,...);
+void UART_send_command(char* postfix,const char* formatstr,...);
 #endif

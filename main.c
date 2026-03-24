@@ -2,5 +2,6 @@
 
 void main(){
     setup_printer();
+    // set_temp_bed(123);
     printer_serve();
 }

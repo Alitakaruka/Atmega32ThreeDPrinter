@@ -77,7 +77,7 @@ void UART_printf(const char* formatstr, ...){
     va_end(args);
 }
 
-void UART_send_command(char postfix,const char* formatstr,...){
+void UART_send_command(char* postfix,const char* formatstr,...){
     va_list args;
     va_start(args,formatstr);
 
@@ -104,7 +104,7 @@ void UART_send_command(char postfix,const char* formatstr,...){
         }
     }
     va_end(args);
-    UART_send_byte(postfix);
+    UART_send_message(postfix);
 }
 
 void UART_println(const char* formatstr, ...){

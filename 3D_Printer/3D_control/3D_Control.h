@@ -11,6 +11,7 @@
 #include <util/delay.h>
 #include <stdlib.h>
 #include "Light_WS2812/light_ws2812.h"
+#include <math.h>
 
 
 #define AXES_TIMER_PRESCALER 256
@@ -24,7 +25,7 @@
 extern volatile uint16_t StepsSleepTimeout;
 extern volatile uint16_t PID_CALIB_TIME;
 
-char RX_Buffer[RX_Buffer_SIZE];
+static char RX_Buffer[RX_Buffer_SIZE];
 extern volatile ThreeD_Printer* iPrinter; 
 
 void setup_printer();
@@ -71,7 +72,7 @@ inline int convert_ADC_to_temp(int ADCValue){
 
 }
 //Buffer and commands
-void execute_next_command();
+void execute_command(char* command);
 void add_in_buffer(char byte);
 
 //temp
@@ -84,9 +85,13 @@ void handle_Y();
 void handle_E();
 void handle_Z();
 
-extern inline void clear_RX();
+// extern inline void clear_RX();
 
 void error(char* errorMsg);
+void information(char *Msg);
+void success(char *Msg);
+void warning(char *Msg);
+
 void stop_print();
 void panic();
 
@@ -302,12 +307,18 @@ static inline void Command_G92(char *command)
 //Gcode--
 
 //MCode++
-static inline void execute_MCode(const char* prefix, const char* command);
 static inline void heat_bed_command(const char* command,uint8_t wait); //M140 | M190
 static inline void heat_nozzle_command(const char* command,uint16_t wait);//M104 | M109
 static inline void Command_M82(){ //set absolute extruder mode
     iPrinter->Flags |= (1 << FlagExtruderIsAbsalute);
 }
+extern void send_all_information();
+extern void send_base_inforamtion();
+extern void execute_MCode(const char* command);
+extern void execute_GCode( const char* command);
+extern void set_light(uint8_t R,uint8_t G,uint8_t B);
+extern void blickLight(uint8_t R,uint8_t G,uint8_t B);
+
 static inline void Command_M83(){
     iPrinter->Flags &= ~(1 << FlagExtruderIsAbsalute);
 }

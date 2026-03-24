@@ -10,18 +10,19 @@
 #define Debug_Flag6          UART_send_byte('6')
 #define Debug_Flag7          UART_send_byte('7')
 #define Debug_Flag8          UART_send_byte('8')
-#define endcommand            ";"
-#define EndcommandByte        ';'
+#define EndOfData            "\r\n"
+// #define EndcommandByte        ';'
 #define UnknownValue         "__"
 
 //////////////////////////////////////////////////To the printer
+#define Identification "Identification"
 #define StopPrint            "!_"
 #define GetAllInformation    "#_"
 #define GetBaseInformation   "&_"
 #define Check                "*_"
 #define GetTemps             "M105"
-#define NowTemperatureBed    "B_"
-#define NowTemperatureNozzle "N_"
+#define NowTemperatureBed    "B:"
+#define NowTemperatureNozzle "N:"
 #define ReadyToRead          "R_"
 #define BuffercommandSize     "S_"
 #define GetADCValue     "(_" 
@@ -37,19 +38,25 @@
 #define GetVersion "M115"
 
 ///////////////////////////////////////////////////From the printer
-#define M_TemperatureNozzle  "N_%d"
-#define M_TemperatureBed     "B_%d"
-#define M_PositionX          "X_%f"
-#define M_PositionY          "Y_%f"
-#define M_PositionZ          "Z_%f"
-#define M_BuffercommandSize  "S_%d"
-#define M_MaxBufferSize      "^_%d"
-#define M_Name               "n_%s"
-#define M_Version            "V_%s"
-#define M_Width              "W_%d"
-#define M_Length             "L_%d"
-#define M_Height             "H_%d"
-#define M_Type               "T_%s"
+#define M_TemperatureNozzle  "N:%d"
+#define M_TemperatureBed     "B:%d"
+#define M_PositionX          "X:%f"
+#define M_PositionY          "Y:%f"
+#define M_PositionZ          "Z:%f"
+#define MyBufferLen          "M_Buff_Len:%d"
+#define M_Name               "M_Name:%s"
+#define M_Type               "M_Type:%d"
+// #define M_Version            "V_%s"
+#define M_Width              "M_Width:%d"
+#define M_Length             "M_Length:%d"
+#define M_Height             "M_Height:%d"
+#define DEVICE_CHIP_NAME     "Device_chip_name:%s"
+
+#define SwitchTimeout  "Switch_Timeout:"
+#define SwitchHasLight  "HasLight:"
+#define SwitchRGBLight  "RGBLight:"
+#define SYNC            "SYNC"
+
 #define I_DidntDefCommand    "!_%s"
 #define It_UnsuportedCommand "@_%s"
 #define ACK                    "ok"
@@ -119,16 +126,20 @@
 /////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////Errors code
-#define MemoryAllocError            "E_0x01"
-#define ParseCommandError           "E_0x02"
-#define UndefinedCommandError       "E_0x03"
-#define OutOfRange_Error            "E_0x04"
-#define BufferOverflowError         "E_0x05"
-#define RXBufferOverfloError        "E_0x06"
-#define EmbededError                "E_0x07"
-#define NullStepsValueError         "E_0x08"
-#define NullVectorError             "E_0x09"
-#define HomePositionTimeOutError    "E_0x0A"
+#define Error "Error:%s"
+#define Warning "Warning:%s"
+#define Information "Information:%s"
+#define Success "Success:%s"
+// #define MemoryAllocError            "E_0x01"
+// #define ParseCommandError           "E_0x02"
+// #define UndefinedCommandError       "E_0x03"
+// #define OutOfRange_Error            "E_0x04"
+// #define BufferOverflowError         "E_0x05"
+// #define RXBufferOverfloError        "E_0x06"
+// #define EmbededError                "E_0x07"
+// #define NullStepsValueError         "E_0x08"
+// #define NullVectorError             "E_0x09"
+// #define HomePositionTimeOutError    "E_0x0A"
 /////////////////////////////////////////////////////
 
 #endif

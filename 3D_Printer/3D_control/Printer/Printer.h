@@ -35,7 +35,7 @@ typedef struct Steps
 
 typedef struct
 {
-    volatile RingBuffer* buffer;
+    volatile Buffio buffio;
     volatile uint8_t Flags;
     float speed;
     PIDR* NozzlePID;

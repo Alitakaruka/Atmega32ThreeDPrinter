@@ -20,7 +20,7 @@ typedef struct
     float differential;
 }PIDR;
 
-static inline PIDR* new_PIDR(float P_coef, float I_coef, float D_coef,int8_t* ControlReg){
+static inline PIDR* new_PIDR(float P_coef, float I_coef, float D_coef,int16_t* ControlReg){
     PIDR* pid = (PIDR*)malloc(sizeof(PIDR));
     if(pid == NULL){
         return NULL;

@@ -16,10 +16,10 @@
 //Base
 #define PrinterName "ATM32"
 #define S_Version "1.1.0"
-#define PrinterType "FDM"
+#define PrinterType 1 //FDM printer
 //UART
 #define BaudRate 9600
-#define commandsBufferSize 70
+#define commandsBufferSize 1024
 #define RX_Buffer_SIZE commandsBufferSize
 #define UART_Timeout_S 3
 
@@ -50,9 +50,9 @@
 #define FAN1_CONTROL_PIN PD6
 #define FAN2_CONTROL_PIN PD7
 
-#define SIZE_X_MM 200.0f
-#define SIZE_Y_MM 200.0f
-#define SIZE_Z_MM 200.0f
+#define SIZE_X_MM 200
+#define SIZE_Y_MM 200
+#define SIZE_Z_MM 200
 //PINS
 
 #define EndStopsAndAnableStepsDDR DDRB
