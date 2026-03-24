@@ -57,16 +57,17 @@ void UART_printf(const char* formatstr, ...){
             i++;
             if(*i == 's'){
                 char* c_arg = va_arg(args,char*);
-                UART_printf(c_arg);
+                UART_send_message(c_arg);
             }else if(*i == 'd'){
                 int i_arg = va_arg(args,int);
-                char buffer[8];
+                char buffer[16];
                 snprintf(buffer,sizeof(buffer),"%d",i_arg);
                 UART_printf(buffer);
             }else if(*i =='f'){
                 float f_arg =(float) va_arg(args,double);
-                char buffer[10];
-                float_to_string(f_arg,buffer,sizeof(buffer));
+                char buffer[32];
+                snprintf(buffer,sizeof(buffer),"%f",f_arg);
+                // float_to_string(f_arg,buffer,sizeof(buffer));
                 UART_printf(buffer);
             }
         }

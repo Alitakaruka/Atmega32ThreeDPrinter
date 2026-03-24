@@ -13,59 +13,6 @@ char* strconc( char* buffer,...){
     return buffer;
 }
 
-//WARNING! This function allocate memory! use deleteSplit
-char** strSplit(char* string, const char separator) {
-    char* buffer =(char*) malloc((sizeof(char) * strlen(string))+1);
-
-    if(buffer ==NULL){
-        return NULL;
-    }
-    int counter = 1;
-
-    for (char* i = string; *i != '\0';i++) {
-        if (*i == separator){
-            counter++;
-        }
-    }
-
-    counter++;//Last is NULL
-    char** result = (char**)malloc(sizeof(char*) * counter);
-    result[counter - 1] = NULL; //Last is NULL
-    
-    int strCounter = 0;
-    int nowIndex = 0;
-
-    for (int i = 0; string[i] != '\0'; i++) {
-        if (string[i] == separator) {
-            result[strCounter] = (char*)malloc((sizeof(char) * nowIndex) +1 );
-            buffer[nowIndex] = '\0';
-            strcpy(result[strCounter], buffer);
-            strCounter++;
-            nowIndex = 0;
-            memset((void*)buffer, 0, nowIndex +1);
-            continue;
-        }else {
-            buffer[nowIndex] = string[i];
-        }
-        nowIndex++;
-    }
-
-    if (nowIndex != 0) {
-        result[strCounter] = (char*)malloc((sizeof(char) * nowIndex));
-        if(result[strCounter] == NULL){
-            for (int i = 0 ; i<strCounter; i++){
-                free(result[i]);
-            }
-            return NULL;
-        }
-        memset((void*)result[strCounter], 0, ((sizeof(char) * nowIndex) + 1));
-        buffer[nowIndex] = '\0';
-        strcpy(result[strCounter], buffer);
-    }
-    free(buffer);
-    return result;
-
-}
 
 char* get_value_before_separator(char* strSearch, char* buffer,int bufferSize, char separator){
     int i = 0;

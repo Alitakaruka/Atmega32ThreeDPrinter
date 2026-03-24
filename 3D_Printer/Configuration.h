@@ -14,8 +14,8 @@
 #define RGB_LIGHT 0
 
 //Base
-#define PrinterName "ATM32"
-#define S_Version "1.1.0"
+#define PrinterName "Dolboebik"
+#define ChipName "ATM32"
 #define PrinterType 1 //FDM printer
 //UART
 #define BaudRate 9600

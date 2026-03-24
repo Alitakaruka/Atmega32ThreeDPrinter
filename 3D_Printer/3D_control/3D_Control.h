@@ -92,6 +92,9 @@ void information(char *Msg);
 void success(char *Msg);
 void warning(char *Msg);
 
+#define Write_Crash_log(msg) \
+    UART_printf("[%s:%d] %s\n", __FILE__, __LINE__, msg)
+
 void stop_print();
 void panic();
 

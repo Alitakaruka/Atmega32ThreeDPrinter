@@ -27,12 +27,16 @@ void setup_printer()
      //   while(1){
      //      UART_printf("Printer setup sucses!");
      // }
+     // Write_Crash_log("Test");
      iPrinter = malloc(sizeof(ThreeD_Printer));
      if (iPrinter == NULL)
      {
-          error("Printer allocation memory error!");
+          Write_Crash_log("Printer allocation memory error!");
      }
      memset((void *)iPrinter, 0, sizeof(ThreeD_Printer));
+
+          UART_printf("R%d\n",iPrinter->buffio.readPos);
+     UART_printf("w%d\n",iPrinter->buffio.writePos);
 
      iPrinter->NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
      iPrinter->BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
@@ -71,45 +75,33 @@ void setup_printer()
 
 void printer_serve()
 {
-         UART_printf("Bufio is empty:%d\n",Buffio_isEmpty(&iPrinter->buffio));
-     UART_printf("Bufio avalieble:%d\n",Buffio_available(&iPrinter->buffio));
-     UART_printf("Bufio freespace:%d\n",Buffio_freeSpace(&iPrinter->buffio));
-     UART_printf("Bufio readPos:%d\n",iPrinter->buffio.readPos);
-     UART_printf("Bufio WritePos:%d\n",iPrinter->buffio.writePos);
      char CurrentCommand[128] = {};
      while (1)
      {
-          UART_printf("BufferData: %s",Buffio_allBuffer(&iPrinter->buffio));
-          _delay_ms(1000);
-          if (!Buffio_isEmpty(&iPrinter->buffio))
+          // UART_printf("BufferData: %s",Buffio_allBuffer(&iPrinter->buffio));
+          // _delay_ms(1000);
+          // UART_printf("Empty %d,\n",Buffio_isEmpty(&iPrinter->buffio));
+     //           UART_printf("R%d\n",iPrinter->buffio.readPos);
+     // UART_printf("w%d\n",iPrinter->buffio.writePos);
+     _delay_us(1);
+          if (!Buffio_isEmpty(&(iPrinter->buffio)))
           {
-                 UART_printf("Bufio is empty:%d\n",Buffio_isEmpty(&iPrinter->buffio));
-     UART_printf("Bufio avalieble:%d\n",Buffio_available(&iPrinter->buffio));
-     UART_printf("Bufio freespace:%d\n",Buffio_freeSpace(&iPrinter->buffio));
-     UART_printf("Bufio readPos:%d\n",iPrinter->buffio.readPos);
-     UART_printf("Bufio WritePos:%d\n",iPrinter->buffio.writePos);
-
-               if (!Buffio_ReadLine(&iPrinter->buffio, CurrentCommand,
+               UART_printf("Non empty\n");
+               if (!Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
                                sizeof(CurrentCommand), EndOfData)){
-                                   error("Max len overflow!");
-                               }
-               UART_printf("Command: %s\n",CurrentCommand);     
+                                   error("Max command len error!");
+                               } 
                execute_command(CurrentCommand);
                UART_send_command(EndOfData, ACK);
+          }else{
+               
           }
-
-          // if(RingBuffer_capacity(iPrinter->buffer) < 8){
-          //      execute_next_command();
-          //      RingBuffer_delete_and_next(iPrinter->buffer);
-          //      UART_send_command(EndOfData,ACK);
-          //      UATRTimeOut = 0;
-          // }
      }
 }
 
 void add_in_buffer(char byte)
 {
-     if (Buffio_WriteByte(&iPrinter->buffio, byte) != 1)
+     if (Buffio_WriteByte(&(iPrinter->buffio), byte) != 1)
      {
           error("buffer overflow!");
      }
@@ -131,10 +123,8 @@ void execute_command(char* command)
      switch (command[0])
      {
      case 'G':
-          Debug_Flag3;
           execute_GCode(command);
           break;
-
      case 'M':
      Debug_Flag4;
           execute_MCode(command);
@@ -144,13 +134,13 @@ void execute_command(char* command)
           if (strcasestr(command, SYNC))
           {
                UART_send_command(EndOfData,MyBufferLen, commandsBufferSize);
-               Debug_Flag2;
+               memset(&iPrinter->buffio, 0, sizeof(iPrinter->buffio));
           }
           else if (strcasestr(command, Identification))
           {
-               Debug_Flag1;
-                UART_send_command(EndOfData,M_Name,PrinterName);
-                UART_send_command(EndOfData,M_Type, PrinterType);
+               UART_send_command(EndOfData,M_Name,PrinterName);
+               UART_send_command(EndOfData,M_Type, PrinterType);
+               UART_send_command(EndOfData,DEVICE_CHIP_NAME,ChipName);
                // XYZ
                UART_send_command(EndOfData, M_Width, SIZE_X_MM);
                UART_send_command(EndOfData, M_Length, SIZE_Y_MM);
@@ -847,17 +837,17 @@ void success(char *Msg)
 inline void blickLight(uint8_t R, uint8_t G, uint8_t B)
 {
      set_light(R, G, B);
-     _delay_ms(300);
+     _delay_ms(100);
      set_light(0, 0, 0);
-     _delay_ms(300);
+     _delay_ms(100);
      set_light(R, G, B);
-     _delay_ms(300);
+     _delay_ms(100);
      set_light(0, 0, 0);
-     _delay_ms(300);
+     _delay_ms(100);
      set_light(R, G, B);
-     _delay_ms(300);
+     _delay_ms(100);
      set_light(0, 0, 0);
-     _delay_ms(300);
+     _delay_ms(100);
 }
 
 // inline void clear_RX(){
