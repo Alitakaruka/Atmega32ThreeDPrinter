@@ -15,7 +15,7 @@
 
 //Base
 #define PrinterName "Dolboebik"
-#define ChipName "ATM32"
+#define ChipName "ATM_32"
 #define PrinterType 1 //FDM printer
 //UART
 #define BaudRate 9600

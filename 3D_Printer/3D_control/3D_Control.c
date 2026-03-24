@@ -75,10 +75,11 @@ void printer_serve()
      while (1)
      {
           if (!Buffio_isEmpty(&(iPrinter->buffio))){
-               if (!Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
-                    sizeof(CurrentCommand), EndOfData)){
+
+                if (Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
+                    sizeof(CurrentCommand), EndOfData)== -1){      
                     error("Max command len error!");
-               } 
+               }
                execute_command(CurrentCommand);
                UART_send_command(EndOfData, ACK);
           }else{
@@ -726,19 +727,6 @@ inline void heat_nozzle_command(const char *command, uint16_t wait)
      {
           Await();
      }
-
-     // int NozzleTemp = 0;
-     // char** coms = strSplit(command,' ');
-     // for (int i = 0; coms[i] != NULL; i++){
-     //     if(strcasestr(coms[i], "S")){
-     //      NozzleTemp = atoi(coms[i]+1);
-     //     }
-     // }
-     // set_temp_nozzle(NozzleTemp);
-     // deleteSplit(coms);
-     // while(wait && iPrinter->NeedTempNozzle != iPrinter->tempNozzle){
-     //      Await();
-     // }
 }
 
 void Await()
