@@ -1,6 +1,9 @@
 #include "3D_Control.h"
 
- ThreeD_Printer volatile *iPrinter = NULL;
+static ThreeD_Printer printer = {};
+volatile ThreeD_Printer* iPrinter = &printer;
+
+// ThreeD_Printer volatile *iPrinter = NULL;
 
 volatile uint16_t TCNT1A_X = 0;
 volatile uint16_t TCNT1B_Y = 0;
@@ -19,6 +22,9 @@ volatile uint8_t UATRTimeOut = 0;
 volatile uint16_t PID_CALIB_TIME = 0;
 volatile uint8_t ProgramPWM = 0;
 
+const float ticksInSecond = (1 / (((float)255 * (float)1024) / F_CPU));
+
+
 void setup_printer()
 {
    
@@ -28,12 +34,12 @@ void setup_printer()
      //      UART_printf("Printer setup sucses!");
      // }
      // Write_Crash_log("Test");
-     iPrinter = malloc(sizeof(ThreeD_Printer));
-     if (iPrinter == NULL)
-     {
-          Write_Crash_log("Printer allocation memory error!");
-     }
-     memset((void *)iPrinter, 0, sizeof(ThreeD_Printer));
+     // iPrinter = malloc(sizeof(ThreeD_Printer));
+     // if (iPrinter == NULL)
+     // {
+     //      panic("Printer allocation memory error!");
+     // }
+     // memset((void *)iPrinter, 0, sizeof(ThreeD_Printer));
 
      iPrinter->NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
      iPrinter->BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
@@ -67,6 +73,7 @@ void setup_printer()
      blickLight(0, 255, 0); //
      //
      set_light(255, 255, 255);
+     log_success("The printer has loaded!");
 }
 
 void printer_serve()
@@ -76,15 +83,15 @@ void printer_serve()
      {
           if (!Buffio_isEmpty(&(iPrinter->buffio))){
 
-                if (Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
+              if (Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
                     sizeof(CurrentCommand), EndOfData)== -1){      
-                    error("Max command len error!");
+                    panic("Max command len error!");
                }
                execute_command(CurrentCommand);
                UART_send_command(EndOfData, ACK);
           }else{
-               //asm("nop");//Отче наш я же си на небеси. Да светится имя твое да будет царствие твое до будет воля твОя 
-               Await();
+               asm("nop");//Отче наш я же си на небеси. Да светится имя твое да будет царствие твое до будет воля твОя 
+               // Await();
           }
      }
 }
@@ -93,7 +100,7 @@ void add_in_buffer(char byte)
 {
      if (Buffio_WriteByte(&(iPrinter->buffio), byte) != 1)
      {
-          error("buffer overflow!");
+          panic("buffer overflow!");
      }
 }
 
@@ -110,13 +117,17 @@ void set_light(uint8_t R, uint8_t G, uint8_t B)
 }
 void execute_command(char* command)
 {
+     if (strlen(command) == 0){
+          log_warning("Void command!");
+          return;
+     }
      switch (command[0])
+   
      {
      case 'G':
           execute_GCode(command);
           break;
      case 'M':
-     Debug_Flag4;
           execute_MCode(command);
           break;
      
@@ -136,8 +147,6 @@ void execute_command(char* command)
                UART_send_command(EndOfData, M_Length, SIZE_Y_MM);
                UART_send_command(EndOfData, M_Height, SIZE_Z_MM);
                // Temp
-               UART_send_command(EndOfData, M_TemperatureBed, iPrinter->tempBed);
-               UART_send_command(EndOfData, M_TemperatureNozzle, iPrinter->tempNozzle);
           }
           break;
      }
@@ -171,7 +180,7 @@ void out_of_range(float X, float Y, float Z, float E)
           iPrinter->CurrentPosition.Y + Y < 0 ||
           iPrinter->CurrentPosition.Z + Z < 0))
      {
-          error("Out of range!");
+          panic("Out of range!");
      }
 }
 
@@ -183,6 +192,7 @@ void UpdateTemps()
      iPrinter->tempNozzle = (int)((float)iPrinter->tempNozzle * 0.8 + (float)(convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle)) * 0.2));
 }
 
+
 ISR(TIMER0_COMP_vect)
 {
      PID_CALIB_TIME++;
@@ -191,7 +201,6 @@ ISR(TIMER0_COMP_vect)
      CheckTempTimeout++;
      UATRTimeOut++;
      ProgramPWM += 20;
-     float ticksInSecond = (1 / (((float)OCR0 * (float)1024) / F_CPU));
      if (!(iPrinter->Flags & (1 << FlagIMove)) &&
          (StepsSleepTimeout / ticksInSecond) >= STEPS_TIMEOUT_S)
      {
@@ -201,7 +210,7 @@ ISR(TIMER0_COMP_vect)
      if (iPrinter->Flags & (1 << FlagGoHome) &&
          HomePositionTimeout / ticksInSecond >= HOME_POSITION_TIMEOUT_S)
      {
-          error("Home position time out!");
+          panic("Home position time out!");
      }
      if ((CheckTempTimeout / ticksInSecond) >= 1.0)
      {
@@ -389,6 +398,7 @@ void set_dir_port_state(uint8_t XDir, uint8_t YDir, uint8_t ZDir, uint8_t EDir)
 
 void bring_steps_to_format()
 {
+     // iPrinter->Steps.nowEsteps = iPrinter->Steps.nowXsteps < 0 ? -iPrinter->Steps.nowXsteps
      if (iPrinter->Steps.nowXsteps < 0)
           iPrinter->Steps.nowXsteps = -iPrinter->Steps.nowXsteps;
      if (iPrinter->Steps.nowYsteps < 0)
@@ -467,18 +477,21 @@ void home_position()
      iPrinter->CurrentPosition.Y = 0.0;
 }
 
-void move(float X, float Y, float Z, float E, int speedMMS)
+void move(float X, float Y, float Z, float E, float speedMMS)
 {
+
      iPrinter->Steps.nowXsteps = float_to_step(X, X_STEPS_MM);
      iPrinter->Steps.nowYsteps = float_to_step(Y, Y_STEPS_MM);
      iPrinter->Steps.nowZsteps = float_to_step(Z, Z_STEPS_MM);
      iPrinter->Steps.nowEsteps = float_to_step(E, E_STEPS_MM);
-
+     set_dir_port_state(X > 0.0001f, Y > 0.0001f, Z > 0.0001f, E > 0.0001f);
+     bring_steps_to_format();
      // The resulting vector is calculated using the Pythagorean theorem from the previous vectors.
      float resVecXYZE = sqrtf(((sque(X) + sque(Y)) + sque(Z)) + sque(E));
      if (resVecXYZE < 0.0001f)
      {
-          warning("Null steps value!");
+          log_warning("Null steps value!");
+          return;
      }
      if (speedMMS > MaxSpeedMMS)
      {
@@ -488,16 +501,34 @@ void move(float X, float Y, float Z, float E, int speedMMS)
      X_Timer_Register = get_delay_timer((X * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtX);
      Z_Timer_Register = get_delay_timer((Z * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtZ);
      E_Timer_Register = get_delay_timer((E * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtE);
+    
+//     UART_println("E_Timer_Register:%d",E_Timer_Register);
+//     UART_println("Y_Timer_Register:%d",Y_Timer_Register);
+//     UART_println("Z_Timer_Register:%d",Z_Timer_Register);
+//     UART_println("X_Timer_Register:%d",X_Timer_Register);
+//     UART_println("X:%f",X);
+//     UART_println("Y:%f",Y);
+//     UART_println("Z:%f",Z);
+//     UART_println("E:%f",E);
+//     UART_println("F:%d",speedMMS);    
+
+//     UART_println("X NAN:%d",isnan(X));    
+//     UART_println("Y NAN:%d",isnan(Y));    
+//     UART_println("Z NAN:%d",isnan(Z));    
+//     UART_println("E NAN:%d",isnan(E));    
+ 
+
+
+    
      if (stepTimersNull())
      {
-           warning("Null steps value!");
+          log_warning("Null steps value!");
           stop_axes_timer();
           return;
      }
-     enable_steps();
-     set_dir_port_state(X > 0, Y > 0, Z > 0, E > 0);
 
-     bring_steps_to_format();
+     
+     enable_steps();
      start_axes_timer();
      iPrinter->Flags |= (1 << FlagIMove);
      while (iPrinter->Steps.nowXsteps != 0 || iPrinter->Steps.nowYsteps != 0 || iPrinter->Steps.nowEsteps != 0 || iPrinter->Steps.nowZsteps != 0)
@@ -515,19 +546,19 @@ void move(float X, float Y, float Z, float E, int speedMMS)
 
 uint8_t stepTimersNull()
 {
-     if (iPrinter->Steps.nowXsteps && X_Timer_Register == 0)
+     if (iPrinter->Steps.nowXsteps && (X_Timer_Register == 0))
      {
           return 1;
      }
-     if (iPrinter->Steps.nowYsteps && Y_Timer_Register == 0)
+     if (iPrinter->Steps.nowYsteps && (Y_Timer_Register == 0))
      {
           return 1;
      }
-     if (iPrinter->Steps.nowZsteps && Z_Timer_Register == 0)
+     if (iPrinter->Steps.nowZsteps && (Z_Timer_Register == 0))
      {
           return 1;
      }
-     if (iPrinter->Steps.nowEsteps && E_Timer_Register == 0)
+     if (iPrinter->Steps.nowEsteps && (E_Timer_Register == 0))
      {
           return 1;
      }
@@ -540,142 +571,133 @@ void send_base_inforamtion()
 {
      char data[] = PrinterName;
      UART_send_command(EndOfData, M_Name, PrinterName);
-     // UART_send_command(EndOfData, M_Version, S_Version);
      UART_send_command(EndOfData, M_Type, PrinterType);
 
      // SIZE
      UART_send_command(EndOfData, M_Width, SIZE_X_MM);
      UART_send_command(EndOfData, M_Height, SIZE_Y_MM);
      UART_send_command(EndOfData, M_Length, SIZE_Z_MM);
-
-     // UART_send_command(EndOfData, M_BuffercommandSize, 8);
-     // UART_send_command(EndOfData, M_MaxBufferSize, 8);
 }
 
 void send_cur_information()
 {
+     //Position
      UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
      UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
      UART_send_command(EndOfData, M_PositionZ, iPrinter->CurrentPosition.Z);
      // Temp
-     UART_send_command(EndOfData, M_TemperatureBed, iPrinter->tempBed);
-     UART_send_command(EndOfData, M_TemperatureNozzle, iPrinter->tempNozzle);
+     UART_send_command(EndOfData, BedTemp, iPrinter->tempBed,iPrinter->BedPID->needValue);
+     UART_send_command(EndOfData, ExtruderTemp, iPrinter->tempNozzle,iPrinter->NozzlePID->needValue);
+     //Fans
+     UART_send_command(EndOfData,FanSpeed,1,iPrinter->fan1);     
+     UART_send_command(EndOfData,FanSpeed,2,iPrinter->fan2);     
 }
 
 
 inline void execute_GCode(const char *command)
 {
-     if (!strcasestr(command, G0))
+     int gcode;
+     if (sscanf(command, "G%d", &gcode) == 1)
      {
-          command_G0(command);
-     }
-     else if (!strcasestr(command, G1))
+     switch (gcode)
      {
-          command_G1(command);
-     }
-     else if (!strcasestr(command, G4))
-     {
-          command_G4(command);
-     }
-     else if (!strcasestr(command, G10))
-     {
-          Command_G10(command);
-     }
-     else if (!strcasestr(command, G11))
-     {
-          Command_G11(command);
-     }
-     else if (!strcasestr(command, G28))
-     {
-          home_position();
-     }
-     else if (!strcasestr(command, G90))
-     {
-          Command_G90();
-     }
-     else if (!strcasestr(command, G91))
-     {
-          Command_G91();
-     }
-     else if (!strcasestr(command, G92))
-     {
-          Command_G92(command);
-     }
-     else
-     {
-          UART_send_command(EndOfData, It_UnsuportedCommand, command);
-     }
+        case 0: command_G0(command); break;
+        case 1: command_G1(command); break;
+        case 4: command_G4(command); break;
+        case 10: Command_G10(command); break;
+        case 11: Command_G11(command); break;
+        case 28: home_position(); break;
+        case 90: Command_G90(); break;
+        case 91: Command_G91(); break;
+        case 92: Command_G92(command); break;
+    }
+}
+
+// return;
+//      if (!strcasestr(command, G0))
+//      {
+//           command_G0(command);
+//      }
+//      else if (!strcasestr(command, G1))
+//      {
+//           UART_send_message("command_G1");
+//           command_G1(command);
+//      }
+//      else if (!strcasestr(command, G4))
+//      {
+//           UART_send_message("command_G4");
+//           command_G4(command);
+//      }
+//      else if (!strcasestr(command, G10))
+//      {
+//           UART_send_message("Command_G10");
+//           Command_G10(command);
+//      }
+//      else if (!strcasestr(command, G11))
+//      {
+//           UART_send_message("Command_G11");
+//           Command_G11(command);
+//      }
+//      else if (!strcasestr(command, G28))
+//      {
+//           UART_send_message("command_G28");
+//           home_position();
+//      }
+//      else if (!strcasestr(command, G90))
+//      {
+//           UART_send_message("command_90");
+//           Command_G90();
+//      }
+//      else if (!strcasestr(command, G91))
+//      {
+//           UART_send_message("command_G91");
+//           Command_G91();
+//      }
+//      else if (!strcasestr(command, G92))
+//      {
+//           UART_send_message("command_G92");
+//           Command_G92(command);
+//      }
 }
 
 inline void execute_MCode(const char *command)
 {
-     if (!strcasestr(command, HeatBed))
-     {
-          heat_bed_command(command, 0);
+     int MCode;
+
+     if(sscanf(command,"M%d",&MCode)!= 1){
+          log_warning("Invalid command format");
+          return;
      }
-     else if (!strcasestr(command, HeatBedAndwait))
+
+     switch (MCode)
      {
-          heat_bed_command(command, 1);
-     }
-     else if (!strcasestr(command, GetTemps))
-     {
-          UART_send_command(EndOfData, M_TemperatureBed, iPrinter->tempBed);
-          UART_send_command(EndOfData, M_TemperatureNozzle, iPrinter->tempNozzle);
-     }
-     else if (!strcasestr(command, HeatNozzle))
-     {
-          heat_nozzle_command(command, 0);
-     }
-     else if (!strcasestr(command, HeatNozzleAndWait))
-     {
-          heat_nozzle_command(command, 1);
-     }
-     else if (!strcasestr(command, StopHeating))
-     {
+     case HeatBed:  heat_bed_command(command, 0); break;
+     case HeatBedAndwait:  heat_bed_command(command, 1); break;
+     case GetTemps:   
+          UART_send_command(EndOfData, BedTemp, iPrinter->tempBed,iPrinter->BedPID->needValue);
+          UART_send_command(EndOfData, ExtruderTemp, iPrinter->tempNozzle,iPrinter->NozzlePID->needValue); 
+          break;
+     case HeatNozzle:  heat_nozzle_command(command, 0); break;
+     case HeatNozzleAndWait:  heat_nozzle_command(command, 1); break;
+     case StopHeating:  
           set_temp_bed(0);
           set_temp_nozzle(0);
-     }
-     else if (!strcasestr(command, STOP))
-     {
-          stop_axes_timer();
-     }
-     else if (!strcasestr(command, GetPosition))
-     {
+          break;
+     case STOP:   stop_axes_timer(); break;
+     case GetPosition:  
           UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
           UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
           UART_send_command(EndOfData, M_PositionZ, iPrinter->CurrentPosition.Z);
-     }
-     else if (!strcasestr(command, M82))
-     {
-          Command_M82();
-     }
-     else if (!strcasestr(command, M83))
-     {
-          Command_M83();
-     }
-     else if (!strcasestr(command, EnableStepscommand))
-     {
-          enable_steps();
-     }
-     else if (!strcasestr(command, DisableStepscommand))
-     {
-          disable_steps();
-     }
-     else if (!strcasestr(command, TurnOnFan))
-     {
-          set_fan_value(command);
-     }
-     else if (!strcasestr(command, TurnOfFan))
-     {
-          diasble_fan(command);
-     }
-     else if (!strcasestr(command, M303))
-     {
-          CalibrationPIDs();
-     }
-     else
-     {
-          UART_send_command(EndOfData, It_UnsuportedCommand, command);
+          break;
+     case M82:  Command_M82(); break;
+     case M83:  Command_M83(); break;
+     case EnableStepscommand:  enable_steps(); break;
+     case DisableStepscommand:  disable_steps(); break;
+     case TurnOnFan:   set_fan_value(command); break;
+     case TurnOfFan:   diasble_fan(command); break;
+
+     default:
+          log_warning("command not defined");
      }
 }
 
@@ -731,9 +753,8 @@ inline void heat_nozzle_command(const char *command, uint16_t wait)
 
 void Await()
 {
-     if (iPrinter->Flags & (1 << FlagUARTTimeOut) != 0)
+    if ((iPrinter->Flags & (1 << FlagUARTTimeOut)) != 0)
      {
-          // UART_send_command(EndOfData,CommandImHere);
           send_cur_information();
           iPrinter->Flags &= ~(1 << FlagUARTTimeOut);
           UATRTimeOut = 0;
@@ -760,7 +781,8 @@ inline void set_temp_nozzle(int temp)
 
 /////////////////////////////Gcode and commands --
 
-void error(char *errorMsg)
+
+void panic(char *errorMsg)
 {
      UART_printf(Error, errorMsg);
      stop_print();
@@ -770,19 +792,30 @@ void error(char *errorMsg)
      }
 }
 
-void warning(char *Msg)
+
+void log_error(char *errorMsg)
 {
-     UART_printf(Warning, Msg);
+     UART_send_command(EndOfData,Error, errorMsg);
+     stop_print();
+     blickLight(255, 0, 0);
+     while (1)
+     {
+     }
 }
 
-void information(char *Msg)
+void log_warning(char *Msg)
 {
-     UART_printf(Error, Msg);
+     UART_send_command(EndOfData,Warning, Msg);
 }
 
-void success(char *Msg)
+void log_information(char *Msg)
 {
-     UART_printf(Success, Msg);
+     UART_send_command(EndOfData,Information, Msg);
+}
+
+void log_success(char *Msg)
+{
+     UART_send_command(EndOfData,Success, Msg);
 }
 
 inline void blickLight(uint8_t R, uint8_t G, uint8_t B)

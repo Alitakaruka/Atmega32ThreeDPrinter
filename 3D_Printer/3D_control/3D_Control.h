@@ -25,7 +25,7 @@
 extern volatile uint16_t StepsSleepTimeout;
 extern volatile uint16_t PID_CALIB_TIME;
 
-static char RX_Buffer[RX_Buffer_SIZE];
+// static char RX_Buffer[RX_Buffer_SIZE];
 extern volatile ThreeD_Printer* iPrinter; 
 
 void setup_printer();
@@ -65,7 +65,7 @@ static inline int float_to_step(float distance_MM, int stepByMM){
     return round(distance_MM * stepByMM);
 }
 void move_to(float X,float Y, float Z, float E,int speedMMS);
-void move(float X, float Y, float Z, float E, int speedMMS);
+void move(float X, float Y, float Z, float E, float speedMMS);
 
 void Await();
 inline int convert_ADC_to_temp(int ADCValue){
@@ -87,10 +87,11 @@ void handle_Z();
 
 // extern inline void clear_RX();
 
-void error(char* errorMsg);
-void information(char *Msg);
-void success(char *Msg);
-void warning(char *Msg);
+void panic(char* errorMsg);
+void log_error(char* errorMsg);
+void log_information(char *Msg);
+void log_success(char *Msg);
+void log_warning(char *Msg);
 
 #define Write_Crash_log(msg) \
     UART_printf("[%s:%d] %s\n", __FILE__, __LINE__, msg)
@@ -105,68 +106,89 @@ inline float sque(float value){
      return value * value;
 }
 //GCode++
-static inline void command_G0(const char *command)
-{
-     float X = 0, Y = 0, Z = 0, F = 0;
+#define command_G0(command)  command_G1(command)
+
+// static inline void command_G0(const char *command)
+// {
+//     ;
+//      float X = 0, Y = 0, Z = 0, F = 0;
+//      while (*command != '\0')
+//      {
+//           if (*command == 'X' || *command == 'x')
+//           {
+//                scanf(command,"X%f",&X);
+//                // X = parse_GCode_from_string(command + 1);
+//           }
+//           else if (*command == 'Y' || *command == 'y')
+//           {
+//                scanf(command,"X%f",&X);
+//                // Y = parse_GCode_from_string(command + 1);
+//           }
+//           else if (*command == 'Z' || *command == 'z')
+//           {
+//                scanf(command,"X%f",&X);
+//                // Z = parse_GCode_from_string(command + 1);
+//           }
+//           else if (*command == 'F' || *command == 'f')
+//           {
+//                scanf(command,"X%f",&X);
+//                // F = parse_GCode_from_string(command + 1) / 60;
+//           }
+//           command++;
+//      }
+//      if (F <= 0){
+//           F = MaxSpeedMMS;
+//      }
+
+//      if(iPrinter->Flags & (1 << FlagIsAbsalute)){
+//           X = X-iPrinter->CurrentPosition.X;
+//           Y = X-iPrinter->CurrentPosition.Y;
+//           Z = X-iPrinter->CurrentPosition.Z;
+//     }
+   
+//     move(X, Y, Z, 0, F);
+// }
+static inline void command_G1 (const char* command){
+     float X = NAN, Y = NAN, Z = NAN, E = NAN, F = NAN;
+     
      while (*command != '\0')
      {
-          if (*command == 'X' || *command == 'x')
-          {
+          if (*command == 'X' || *command == 'x'){
                X = parse_GCode_from_string(command + 1);
           }
-          else if (*command == 'Y' || *command == 'y')
-          {
+          else if (*command == 'Y' || *command == 'y'){
                Y = parse_GCode_from_string(command + 1);
           }
-          else if (*command == 'Z' || *command == 'z')
-          {
+          else if (*command == 'Z' || *command == 'z'){
                Z = parse_GCode_from_string(command + 1);
           }
-          else if (*command == 'F' || *command == 'f')
-          {
+          else if (*command == 'F' || *command == 'f'){
                F = parse_GCode_from_string(command + 1) / 60;
+               UART_println("F parce: %f",parse_GCode_from_string(command + 1) / 60);
+          }else if(*command == 'E' || *command == 'e'){
+               E = get_extruder_move(parse_GCode_from_string(command+1));
           }
           command++;
-     }
-     if (F <= 0){
-          F = MaxSpeedMMS;
-     }
-
-     if(iPrinter->Flags & (1 << FlagIsAbsalute)){
-          X = X-iPrinter->CurrentPosition.X;
-          Y = X-iPrinter->CurrentPosition.Y;
-          Z = X-iPrinter->CurrentPosition.Z;
     }
-   
-    move(X, Y, Z, 0, F);
-}
-static inline void command_G1 (const char* command){
-     float X = 0, Y = 0, Z = 0, E = 0, F = 0;
-     while (*command != '\0')
-     {
-          if (*command == 'X' || *command == 'x')
-          {
-               X = parse_GCode_from_string(command + 1);
-          }else if(*command == 'Y' || *command == 'y'){
-              Y = parse_GCode_from_string(command+1);
-         }else if(*command == 'Z' || *command == 'z'){
-              Z = parse_GCode_from_string(command+1);
-         }else if(*command == 'E' || *command == 'e'){
-              E = get_extruder_move(parse_GCode_from_string(command+1));
-         }else if(*command == 'F' || *command == 'f'){
-              F = parse_GCode_from_string(command+1) / 60;
-         }
-         command++;
-    }
-    if (F <= 0){
-         F = iPrinter->speed;
+    if (isnan(F)){
+          F = iPrinter->speed;
     }else{
-     iPrinter->speed = F;
+          iPrinter->speed = F;
     }
-    if(iPrinter->Flags & (1 << FlagIsAbsalute)){
-          X = X-iPrinter->CurrentPosition.X;
-          Y = X-iPrinter->CurrentPosition.Y;
-          Z = X-iPrinter->CurrentPosition.Z;
+
+   if(iPrinter->Flags & (1 << FlagIsAbsalute)){
+          X =  (!isnan(X) ? X-iPrinter->CurrentPosition.X: 0);
+          Y =  (!isnan(Y)  ?  Y-iPrinter->CurrentPosition.Y: 0);
+          Z =  (!isnan(Z) ? Z-iPrinter->CurrentPosition.Z: 0);
+   }else{
+     X = (isnan(X) ? 0 : X);
+     Y = (isnan(Y) ? 0 : Y);
+     Z = (isnan(Z) ? 0 : Z);
+   }
+    if (iPrinter->Flags &(1 << FlagExtruderIsAbsalute)){
+          E = (!isnan(E) ? E-iPrinter->CurrentPosition.E: 0);
+    }else{
+          E = (isnan(E) ? 0: E);
     }
     E = E*iPrinter->flow;
     move(X, Y, Z, E, F);

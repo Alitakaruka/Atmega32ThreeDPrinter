@@ -2,45 +2,54 @@
 #define commandS_H
 
 
-#define Debug_Flag1          UART_send_byte('1')
-#define Debug_Flag2          UART_send_byte('2')
-#define Debug_Flag3          UART_send_byte('3')
-#define Debug_Flag4          UART_send_byte('4')
-#define Debug_Flag5          UART_send_byte('5')
-#define Debug_Flag6          UART_send_byte('6')
-#define Debug_Flag7          UART_send_byte('7')
-#define Debug_Flag8          UART_send_byte('8')
+#define Debug_Flag1          UART_println("1")
+#define Debug_Flag2          UART_println("2")
+#define Debug_Flag3          UART_println("3")
+#define Debug_Flag4          UART_println("4")
+#define Debug_Flag5          UART_println("5")
+#define Debug_Flag6          UART_println("6")
+#define Debug_Flag7          UART_println("7")
+#define Debug_Flag8          UART_println("8")
 #define EndOfData            "\r\n"
 // #define EndcommandByte        ';'
 #define UnknownValue         "__"
 
 //////////////////////////////////////////////////To the printer
 #define Identification "Identification"
-#define StopPrint            "!_"
-#define GetAllInformation    "#_"
-#define GetBaseInformation   "&_"
-#define Check                "*_"
-#define GetTemps             "M105"
-#define ReadyToRead          "R_"
-#define BuffercommandSize     "S_"
-#define GetADCValue     "(_" 
-#define HeatBed "M140"
-#define HeatBedAndwait "M190"
-#define HeatNozzle "M104"
-#define HeatNozzleAndWait "M109"
-#define TurnOnFan "M106"
-#define TurnOfFan "M107"
-#define StopHeating "M108"
-#define STOP "M112"
-#define GetPosition "M114"
-#define GetVersion "M115"
+// #define StopPrint            "!_"
+// #define GetAllInformation    "#_"
+// #define GetBaseInformation   "&_"
+// #define Check                "*_"
+// #define ReadyToRead          "R_"
+// #define BuffercommandSize     "S_"
+// #define GetADCValue     "(_" 
+
+#define GetTemps             105
+#define HeatBed 140
+#define HeatBedAndwait 190
+#define HeatNozzle 104
+#define HeatNozzleAndWait 109
+#define TurnOnFan 106
+#define TurnOfFan 107
+#define StopHeating 108
+#define STOP 112
+#define GetPosition 114
+#define GetVersion 115
 
 ///////////////////////////////////////////////////From the printer
-#define M_TemperatureNozzle  "N:%d"
-#define M_TemperatureBed     "B:%d"
 #define M_PositionX          "X:%f"
 #define M_PositionY          "Y:%f"
 #define M_PositionZ          "Z:%f"
+
+// #define ExtruderTempPref  "N0:"
+// #define	BedTempPref       "B0:"
+// #define	FanSpeedPref      "FAN:"
+#define	ExtruderTemp      "N0:%d/%d"
+#define	Extruder2Temp     "N1:%d/%d"
+#define	BedTemp           "B0:%d/%d"
+#define	FanSpeed          "FAN:F%d/T%d"
+
+
 #define MyBufferLen          "M_Buff_Len:%d"
 #define M_Name               "M_Name:%s"
 #define M_Type               "M_Type:%d"
@@ -61,24 +70,24 @@
 #define CommandImHere        "*_"
 #define ClearBuffer           "!!!!!"
 ////////////////////////////////////////////////////GCode
-#define G0  "G0" //Fast move 
-#define G1  "G1" //move
-#define G4  "G4" //sleep
-#define G10 "G10"//retract
-#define G11 "G11" //unretract
-#define G28 "G28" //Home position
-#define G90 "G90" //set absolute coord
-#define G91 "G91"
-#define G92 "G92" //Set position
+#define G0  0 //Fast move 
+#define G1  1 //move
+#define G4  4 //sleep
+#define G10 10//retract
+#define G11 11 //unretract
+#define G28 28 //Home position
+#define G90 90 //set absolute coord
+#define G91 91
+#define G92 92 //Set position
 
-#define EnableStepscommand  "M17"
-#define DisableStepscommand  "M18"
+#define EnableStepscommand  17
+#define DisableStepscommand  18
 
-#define M82 "M82"
-#define M83 "M83"
+#define M82 82
+#define M83 83
 
-#define M140 "M140"
-#define M190 "M190"
+#define M140 140
+#define M190 190
 
 
 ///////////////////////////////////////////////////// Unsuported

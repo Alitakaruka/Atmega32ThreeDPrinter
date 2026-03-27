@@ -22,7 +22,7 @@ void RingBuffer_add_element(volatile RingBuffer* buffer,const char* element);
 
 typedef struct 
 {
-    unsigned char data[500];
+    unsigned char data[commandsBufferSize];
     size_t  readPos;
     size_t  writePos;    
 }Buffio;

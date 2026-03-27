@@ -19,8 +19,7 @@
 #define PrinterType 1 //FDM printer
 //UART
 #define BaudRate 9600
-#define commandsBufferSize 1024
-#define RX_Buffer_SIZE commandsBufferSize
+#define commandsBufferSize 512
 #define UART_Timeout_S 3
 
 //CastomTermistor,TERMISTER_NTC100k... todo
@@ -36,7 +35,7 @@
 #define HOME_POSITION_TIMEOUT_S 10
 //
 #define MaxSpeedMMS 200
-#define StandartSpeed 50
+#define StandartSpeed 50.0
 //heat
 #define PWM_DDR DDRD
 #define PWM_PORT PORTD 
