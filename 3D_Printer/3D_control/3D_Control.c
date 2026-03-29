@@ -571,8 +571,6 @@ void send_base_inforamtion()
 
 void send_cur_information()
 {
-
-     
      //Position
      UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
      UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
@@ -690,8 +688,8 @@ inline void execute_MCode(const char *command)
      case DisableStepscommand:  disable_steps(); break;
      case TurnOnFan:   set_fan_value(command); break;
      case TurnOfFan:   diasble_fan(command); break;
-     case M220:  sscanf(command,"M220 S%d",&(iPrinter->speedMultiplier)) ;break;
-     case M221:  sscanf(command,"M221 S%d",&(iPrinter->flow));break;
+     // case M220:  sscanf(command,"M220 S%d",&(iPrinter->speedMultiplier)) ;break;
+     // case M221:  sscanf(command,"M221 S%d",&(iPrinter->flow));break;
 
      case M486:break;
      case M73: break;
