@@ -571,7 +571,6 @@ void send_base_inforamtion()
 
 void send_cur_information()
 {
-     
      //Position
      UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
      UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
