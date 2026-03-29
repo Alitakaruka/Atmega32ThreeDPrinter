@@ -513,7 +513,6 @@ void move(float X, float Y, float Z, float E, float speedMMS)
      if (stepTimersNull())
      {
           log_warning("Null steps value!");
-          stop_axes_timer();
           return;
      }
 

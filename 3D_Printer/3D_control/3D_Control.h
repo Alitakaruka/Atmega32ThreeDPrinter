@@ -194,6 +194,8 @@ static inline void command_G1 (const char* command){
           E = (isnan(E) ? 0: E);
     }
     E = E* ((float)(iPrinter->flowrate)/ 100.0f);
+    log_information("F:%d",F);
+    log_information("E:%d",E);
     move(X, Y, Z, E, F);
 }
 
