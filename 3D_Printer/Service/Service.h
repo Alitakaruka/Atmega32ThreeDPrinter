@@ -5,11 +5,12 @@
 #include <stdlib.h>
 #include <avr/io.h>
 
-extern char __heap_start;
-extern char *__brkval;
+extern int __heap_start; // конец статических переменных
+extern int __bss_end;    // конец BSS
+extern int *__brkval;    // текущий указатель кучи
 
 char* strconc( char* buffer,...);
-int freeRam();
+int free_memory();
 char** strSplit(char* string, const char separator);
 void deleteSplit(const char** arrStrs);
 void ADC_Init();

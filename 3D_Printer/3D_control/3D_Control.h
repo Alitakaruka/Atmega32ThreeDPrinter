@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "Light_WS2812/light_ws2812.h"
 #include <math.h>
+#include <stdarg.h>
 
 
 #define AXES_TIMER_PRESCALER 256
@@ -88,10 +89,10 @@ void handle_Z();
 // extern inline void clear_RX();
 
 void panic(char* errorMsg);
-void log_error(char* errorMsg);
-void log_information(char *Msg);
-void log_success(char *Msg);
-void log_warning(char *Msg);
+void log_error(const char* errorMsg,...);
+void log_information(const char *Msg,...);
+void log_success(const char *Msg,...);
+void log_warning(const char *Msg,...);
 
 #define Write_Crash_log(msg) \
     UART_printf("[%s:%d] %s\n", __FILE__, __LINE__, msg)
@@ -176,6 +177,8 @@ static inline void command_G1 (const char* command){
           iPrinter->speed = F;
     }
 
+   F = (F / 100) * iPrinter->speedMultiplier;
+
    if(iPrinter->Flags & (1 << FlagIsAbsalute)){
           X =  (!isnan(X) ? X-iPrinter->CurrentPosition.X: 0);
           Y =  (!isnan(Y)  ?  Y-iPrinter->CurrentPosition.Y: 0);
@@ -211,57 +214,57 @@ static inline void command_G4(const char* command){
     // deleteSplit(split);
 }
 
-static inline void CalibrationPIDs(){
-     UART_printf("PID calibration is start;");
-     for (int P = 1; P != 10; P++){
-         for(int I = 1; I != 10; I++){
-             for(int D = 1;D!= 10; D++){
-               iPrinter->NozzlePID->proportionallyCoef = P;
-               iPrinter->NozzlePID->integralCoef = I;
-               iPrinter->NozzlePID->differinialCoef = D;
-               iPrinter->BedPID->proportionallyCoef = P;
-               iPrinter->BedPID->integralCoef = I;
-               iPrinter->BedPID->differinialCoef = D;
-               iPrinter->Flags &= ~(1 << FlagColibrationPID);
-               PID_CALIB_TIME =0;
-               iPrinter->NozzlePID->needValue = 200;
-               iPrinter->BedPID->needValue = 50;
-               int maxN,maxB,midleN,MidleB = 0;
-               uint32_t CounterN,CounterB = 0;
+// static inline void CalibrationPIDs(){
+//      UART_printf("PID calibration is start;");
+//      for (int P = 1; P != 10; P++){
+//          for(int I = 1; I != 10; I++){
+//              for(int D = 1;D!= 10; D++){
+//                iPrinter->NozzlePID->proportionallyCoef = P;
+//                iPrinter->NozzlePID->integralCoef = I;
+//                iPrinter->NozzlePID->differinialCoef = D;
+//                iPrinter->BedPID->proportionallyCoef = P;
+//                iPrinter->BedPID->integralCoef = I;
+//                iPrinter->BedPID->differinialCoef = D;
+//                iPrinter->Flags &= ~(1 << FlagColibrationPID);
+//                PID_CALIB_TIME =0;
+//                iPrinter->NozzlePID->needValue = 200;
+//                iPrinter->BedPID->needValue = 50;
+//                int maxN,maxB,midleN,MidleB = 0;
+//                uint32_t CounterN,CounterB = 0;
 
-               while(!((iPrinter->Flags) & (1 << FlagColibrationPID))){
-                    CounterN++;
-                    CounterB++;
-                    if(iPrinter->NozzlePID->needValue - iPrinter->tempNozzle < maxN){
-                         maxN = (iPrinter->NozzlePID->needValue - iPrinter->tempNozzle < 0) ? 
-                         iPrinter->NozzlePID->needValue - iPrinter->tempNozzle : 
-                         iPrinter->NozzlePID->needValue - iPrinter->tempNozzle *-1;
-                    }    
-                    midleN = (uint32_t)midleN *((float)iPrinter->tempNozzle/(float)CounterN) ;
-                    MidleB = (uint32_t)MidleB *((float)iPrinter->tempBed/(float)CounterB) ;
-                    if(iPrinter->BedPID->needValue - iPrinter->tempBed < maxN){
-                         maxN = (iPrinter->BedPID->needValue - iPrinter->tempBed < 0) ? 
-                         iPrinter->BedPID->needValue - iPrinter->tempBed : 
-                         iPrinter->BedPID->needValue - iPrinter->tempBed *-1;
-                    }    
-                    Await();
-               }
-               PID_CALIB_TIME =0;
-               PIDR_set_need_value(iPrinter->NozzlePID,0);
-               PIDR_set_need_value(iPrinter->BedPID,0);
-               UART_printf("calib with P:%d,I:%d,D:%d complete;",P,I,D);
-               UART_printf("results:maxNozzle:%d, maxBed:%d;",maxN,maxB);
-               UART_printf("MidleNozzle:%d, MidleBed:%d;",midleN,MidleB);
-               //Cooling
+//                while(!((iPrinter->Flags) & (1 << FlagColibrationPID))){
+//                     CounterN++;
+//                     CounterB++;
+//                     if(iPrinter->NozzlePID->needValue - iPrinter->tempNozzle < maxN){
+//                          maxN = (iPrinter->NozzlePID->needValue - iPrinter->tempNozzle < 0) ? 
+//                          iPrinter->NozzlePID->needValue - iPrinter->tempNozzle : 
+//                          iPrinter->NozzlePID->needValue - iPrinter->tempNozzle *-1;
+//                     }    
+//                     midleN = (uint32_t)midleN *((float)iPrinter->tempNozzle/(float)CounterN) ;
+//                     MidleB = (uint32_t)MidleB *((float)iPrinter->tempBed/(float)CounterB) ;
+//                     if(iPrinter->BedPID->needValue - iPrinter->tempBed < maxN){
+//                          maxN = (iPrinter->BedPID->needValue - iPrinter->tempBed < 0) ? 
+//                          iPrinter->BedPID->needValue - iPrinter->tempBed : 
+//                          iPrinter->BedPID->needValue - iPrinter->tempBed *-1;
+//                     }    
+//                     Await();
+//                }
+//                PID_CALIB_TIME =0;
+//                PIDR_set_need_value(iPrinter->NozzlePID,0);
+//                PIDR_set_need_value(iPrinter->BedPID,0);
+//                UART_printf("calib with P:%d,I:%d,D:%d complete;",P,I,D);
+//                UART_printf("results:maxNozzle:%d, maxBed:%d;",maxN,maxB);
+//                UART_printf("MidleNozzle:%d, MidleBed:%d;",midleN,MidleB);
+//                //Cooling
 
-                 iPrinter->Flags &= ~(1 << FlagColibrationPID);
-                 while(!(iPrinter->Flags) & (1 << FlagColibrationPID)){
+//                  iPrinter->Flags &= ~(1 << FlagColibrationPID);
+//                  while(!(iPrinter->Flags) & (1 << FlagColibrationPID)){
                     
-                 }
-             }
-         }
-     }
- }
+//                  }
+//              }
+//          }
+//      }
+//  }
  
 static inline void Command_G10(char* command){
      float E,F = 0;

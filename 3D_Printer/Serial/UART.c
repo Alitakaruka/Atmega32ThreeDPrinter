@@ -48,6 +48,37 @@ void UART_send_message(const char* message){
     }
 }
 
+void UART_printf_WriteLog(const char* logPrefix,const char* postfix,const char* formatstr, ...){
+    va_list args;
+    va_start(args,formatstr);
+    UART_send_message(logPrefix);
+
+    for(const char* i = formatstr; *i!='\0';i++){
+        if(*i == '%'){
+            i++;
+            if(*i == 's'){
+                char* c_arg = va_arg(args,char*);
+                UART_send_message(c_arg);
+            }else if(*i == 'd'){
+                int i_arg = va_arg(args,int);
+                char buffer[16];
+                snprintf(buffer,sizeof(buffer),"%d",i_arg);
+                UART_send_message(buffer);
+            }else if(*i =='f'){
+                float f_arg =(float) va_arg(args,double);
+                char buffer[10];
+                // snprintf(buffer,sizeof(buffer),"%f",f_arg);
+                float_to_string(f_arg,buffer,sizeof(buffer));
+                UART_send_message(buffer);
+            }
+        }
+        else{
+            UART_send_byte(*i); 
+        }
+    }
+    va_end(args);
+}
+
 void UART_printf(const char* formatstr, ...){
     va_list args;
     va_start(args,formatstr);
@@ -62,13 +93,13 @@ void UART_printf(const char* formatstr, ...){
                 int i_arg = va_arg(args,int);
                 char buffer[16];
                 snprintf(buffer,sizeof(buffer),"%d",i_arg);
-                UART_printf(buffer);
+                UART_send_message(buffer);
             }else if(*i =='f'){
                 float f_arg =(float) va_arg(args,double);
                 char buffer[10];
                 // snprintf(buffer,sizeof(buffer),"%f",f_arg);
                 float_to_string(f_arg,buffer,sizeof(buffer));
-                UART_printf(buffer);
+                UART_send_message(buffer);
             }
         }
         else{
@@ -77,6 +108,34 @@ void UART_printf(const char* formatstr, ...){
     }
     va_end(args);
 }
+
+void UART_printf_v(const char* formatstr, va_list args){
+    for(const char* i = formatstr; *i!='\0';i++){
+        if(*i == '%'){
+            i++;
+            if(*i == 's'){
+                char* c_arg = va_arg(args,char*);
+                UART_send_message(c_arg);
+            }else if(*i == 'd'){
+                int i_arg = va_arg(args,int);
+                char buffer[16];
+                snprintf(buffer,sizeof(buffer),"%d",i_arg);
+                UART_send_message(buffer);
+            }else if(*i =='f'){
+                float f_arg =(float) va_arg(args,double);
+                char buffer[10];
+                // snprintf(buffer,sizeof(buffer),"%f",f_arg);
+                float_to_string(f_arg,buffer,sizeof(buffer));
+                UART_send_message(buffer);
+            }
+        }
+        else{
+            UART_send_byte(*i); 
+        }
+    }
+    va_end(args);
+}
+
 
 void UART_send_command(char* postfix,const char* formatstr,...){
    va_list args;

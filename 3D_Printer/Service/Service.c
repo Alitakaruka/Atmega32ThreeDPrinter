@@ -2,6 +2,10 @@
 
 #include "math.h"
 #include "Serial/UART.h"
+#include <avr/io.h>
+#include <stdio.h>
+
+
 char* strconc( char* buffer,...){
     va_list args;
     va_start(args,buffer);
@@ -38,24 +42,16 @@ int parse_int_from_string(const char* str){
     return string_to_int(buffer);
 }
 
-// void deleteSplit(const char** arrStrs){
-//     for (char** strs = arrStrs; *strs != NULL; strs++){
-//         free(*strs);
-//     }
-//     free(arrStrs);
-// }
-
-int freeRam() {
-    extern char __stack;
-    extern char *__brkval;
-    char *sp = (char *)SP;
-    char *heap_end = __brkval ? __brkval : &__heap_start;
-    return (int)(sp - heap_end);
-}
-
-int usedStack(void) {
-    uint16_t sp = (SPH << 8) | SPL;
-    return RAMEND - sp;
+int free_memory() {
+    int free_mem;
+    if((int)__brkval == 0) {
+        // куча ещё не использовалась
+        free_mem = ((int)&free_mem) - ((int)&__bss_end);
+    } else {
+        // куча уже использовалась
+        free_mem = ((int)&free_mem) - ((int)__brkval);
+    }
+    return free_mem;
 }
 
 void ADC_Init(){

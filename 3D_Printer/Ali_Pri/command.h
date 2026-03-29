@@ -64,6 +64,8 @@
 #define SwitchRGBLight  "RGBLight:"
 #define SYNC            "SYNC"
 
+#define DebugMode "DebugMode:%d"
+
 #define I_DidntDefCommand    "!_%s"
 #define It_UnsuportedCommand "@_%s"
 #define ACK                    "ok"
@@ -88,9 +90,19 @@
 
 #define M140 140
 #define M190 190
-
+#define M221 221 //flow
+#define M220 220
 
 ///////////////////////////////////////////////////// Unsuported
+
+#define M900 900 //linear advance
+#define M486 486
+#define M73 73
+#define M201 201 //todo
+#define M203 203 //todo
+#define M204 204
+#define M205 205
+
 #define G20  "G20"
 #define G21  "G21"
 #define G29  "G29"
@@ -110,17 +122,13 @@
 #define M110 "M110"
 #define M119 "M119" //TODO
 #define M200 "M200"//todo
-#define M201 "M201"
 #define M202 "M202"
 #define M203 "M203"
-#define M204 "M204"
-#define M205 "M205"
 #define M206 "M206"
 #define M207 "M207"
 #define M208 "M208"
 #define M209 "M209"
 #define M218 "M218"
-#define M221 "M221" //flow
 #define M301 "M301"
 #define M303 "M303"
 #define M404 "M404"
@@ -133,10 +141,10 @@
 /////////////////////////////////////////////////////
 
 /////////////////////////////////////////////////////Errors code
-#define Error "Error:%s"
-#define Warning "Warning:%s"
-#define Information "Information:%s"
-#define Success "Success:%s"
+#define Error "Error:"
+#define Warning "Warning:"
+#define Information "Information:"
+#define Success "Success:"
 // #define MemoryAllocError            "E_0x01"
 // #define ParseCommandError           "E_0x02"
 // #define UndefinedCommandError       "E_0x03"

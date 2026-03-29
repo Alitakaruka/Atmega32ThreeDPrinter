@@ -25,4 +25,5 @@ void UART_send_message(const char* message);
 void UART_printf(const char* formatstr, ...);
 void UART_println(const char* formatstr, ...);
 void UART_send_command(char* postfix,const char* formatstr,...);
+void UART_printf_v(const char* formatstr, va_list args);
 #endif

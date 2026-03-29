@@ -30,14 +30,13 @@ typedef struct Steps
 #define FlagUpdateTemps 3
 #define FlagGoHome 4
 #define FlagIMove 5
-#define FlagColibrationPID 6
+#define FlagDebug 6
 #define FlagEstep 7
 
 typedef struct
 {
     volatile Buffio buffio;
     volatile uint8_t Flags;
-    float speed;
     PIDR* NozzlePID;
     PIDR* BedPID;
     int tempNozzle;
@@ -46,6 +45,10 @@ typedef struct
     // uint8_t NeedTempBed;
 
     float flow;
+    uint8_t speedMultiplier;
+    float speed;
+
+
     uint8_t fan1;
     uint8_t fan2;
     
