@@ -176,13 +176,13 @@ static inline void command_G1 (const char* command){
     }else{
           iPrinter->speed = F;
     }
-    log_information("F:%d",F);
-    log_information("iPrinter->speed:%d",iPrinter->speed);
+    log_information("F:%f",F);
+    log_information("iPrinter->speed:%f",iPrinter->speed);
     log_information("iPrinter->feedrate:%d",iPrinter->feedrate);
 
    F = F * ((float)(iPrinter->feedrate) / 100.0f);
     log_information("F:%d",F);
-    log_information("iPrinter->speed:%d",iPrinter->speed);
+    log_information("iPrinter->speed:%f",iPrinter->speed);
     log_information("iPrinter->feedrate:%d",iPrinter->feedrate);
 
 
