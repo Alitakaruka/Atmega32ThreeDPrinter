@@ -177,9 +177,14 @@ static inline void command_G1 (const char* command){
           iPrinter->speed = F;
     }
     log_information("F:%d",F);
+    log_information("iPrinter->speed:%d",iPrinter->speed);
+    log_information("iPrinter->feedrate:%d",iPrinter->feedrate);
 
-   F = F * ((float)(iPrinter->feedrate) / 100.0);
+   F = F * ((float)(iPrinter->feedrate) / 100.0f);
     log_information("F:%d",F);
+    log_information("iPrinter->speed:%d",iPrinter->speed);
+    log_information("iPrinter->feedrate:%d",iPrinter->feedrate);
+
 
    if(iPrinter->Flags & (1 << FlagIsAbsalute)){
           X =  (!isnan(X) ? X-iPrinter->CurrentPosition.X: 0);
@@ -195,10 +200,7 @@ static inline void command_G1 (const char* command){
     }else{
           E = (isnan(E) ? 0: E);
     }
-    log_information("E:%d",E);
-
     E = E* ((float)(iPrinter->flowrate)/ 100.0f);
-    log_information("E:%d",E);
     move(X, Y, Z, E, F);
 }
 
