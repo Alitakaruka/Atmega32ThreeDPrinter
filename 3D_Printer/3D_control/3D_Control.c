@@ -74,7 +74,7 @@ void setup_printer()
      blickLight(0, 255, 0); //
      //
      set_light(255, 255, 255);
-UART_send_message("test");
+     // UART_send_message("test");
      UART_send_message(EndOfData);
      log_success("The printer has loaded!\n"
      "Name:%s\n"
@@ -688,8 +688,16 @@ inline void execute_MCode(const char *command)
      case DisableStepscommand:  disable_steps(); break;
      case TurnOnFan:   set_fan_value(command); break;
      case TurnOfFan:   diasble_fan(command); break;
-     // case M220:  sscanf(command,"M220 S%d",&(iPrinter->speedMultiplier)) ;break;
-     // case M221:  sscanf(command,"M221 S%d",&(iPrinter->flow));break;
+     case M220: 
+          int Mult;
+          if(sscanf(command,"M220 S%d",&(iPrinter->speedMultiplier))){
+               iPrinter->speedMultiplier = Mult;
+          } ;break;
+     case M221:  
+          int flow;
+          if(sscanf(command,"M221 S%d",&(iPrinter->flow)))
+               iPrinter->flow = flow;
+          ;break;
 
      case M486:break;
      case M73: break;

@@ -17,7 +17,7 @@
 #define PrinterType 1 //FDM printer
 //UART
 #define BaudRate 9600
-#define commandsBufferSize 1024
+#define commandsBufferSize 512
 #define MaxCommandLen 128
 #define UART_Timeout_S 3
 

@@ -1,1 +1,0 @@
-ssh server@192.168.8.2 "cd ~/repos/Atmega32_threeDPrinter && make -B"
