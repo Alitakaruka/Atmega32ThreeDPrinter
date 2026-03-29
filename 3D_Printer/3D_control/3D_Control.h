@@ -177,7 +177,7 @@ static inline void command_G1 (const char* command){
           iPrinter->speed = F;
     }
 
-   F = (F / 100) * iPrinter->speedMultiplier;
+   F = F * ((float)(iPrinter->feedrate) / 100.0);
 
    if(iPrinter->Flags & (1 << FlagIsAbsalute)){
           X =  (!isnan(X) ? X-iPrinter->CurrentPosition.X: 0);
@@ -193,7 +193,7 @@ static inline void command_G1 (const char* command){
     }else{
           E = (isnan(E) ? 0: E);
     }
-    E = E*iPrinter->flow;
+    E = E* ((float)(iPrinter->flowrate)/ 100.0f);
     move(X, Y, Z, E, F);
 }
 

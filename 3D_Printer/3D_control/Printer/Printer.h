@@ -44,8 +44,8 @@ typedef struct
     // int NeedTempNozzle;
     // uint8_t NeedTempBed;
 
-    float flow;
-    uint8_t speedMultiplier;
+    float flowrate;
+    uint8_t feedrate;
     float speed;
 
 

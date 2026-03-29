@@ -43,8 +43,8 @@ void setup_printer()
 
      iPrinter->NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
      iPrinter->BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
-     iPrinter->flow = 1.0;
-     iPrinter->speedMultiplier = 100;
+     iPrinter->flowrate = 100;
+     iPrinter->feedrate = 100;
      // Ports setup
      AXES_DDR = 255;
      AXES_PORT = 0; // disable all ports
@@ -690,13 +690,13 @@ inline void execute_MCode(const char *command)
      case TurnOfFan:   diasble_fan(command); break;
      case M220: 
           int Mult;
-          if(sscanf(command,"M220 S%d",&(iPrinter->speedMultiplier))){
-               iPrinter->speedMultiplier = Mult;
+          if(sscanf(command,"M220 S%d",&(iPrinter->feedrate))){
+               iPrinter->feedrate = Mult;
           } ;break;
      case M221:  
           int flow;
-          if(sscanf(command,"M221 S%d",&(iPrinter->flow)))
-               iPrinter->flow = flow;
+          if(sscanf(command,"M221 S%d",&(iPrinter->flowrate)))
+               iPrinter->flowrate = flow;
           ;break;
 
      case M486:break;
