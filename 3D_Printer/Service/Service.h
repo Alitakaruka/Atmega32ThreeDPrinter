@@ -17,7 +17,7 @@ void ADC_Init();
 uint16_t ADC_read(uint8_t channel);
 
 char* get_value_before_separator(char* strSearch, char* buffer,int bufferSize, char separator);
-float parse_GCode_from_string(const char* str);
+float parse_GCode_from_string(char* str);
 int parse_int_from_string(const char* str);
 
 char* float_to_string(float value, char* buffer, int precision);

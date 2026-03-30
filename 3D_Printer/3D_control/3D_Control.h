@@ -15,6 +15,7 @@
 #include <stdarg.h>
 
 
+
 #define AXES_TIMER_PRESCALER 256
 #define STEP_TIMER_UNIT 2
 
@@ -75,6 +76,12 @@ inline int convert_ADC_to_temp(int ADCValue){
 //Buffer and commands
 void execute_command(char* command);
 void add_in_buffer(char byte);
+
+
+//EEPROM
+void save_setting(){
+     eeprom_write_block(&iPrinter->settings,&settings_eeprom,sizeof(Settings));
+}
 
 //temp
 extern inline void set_temp_bed(uint8_t temp);
@@ -151,26 +158,39 @@ inline float sque(float value){
 // }
 static inline void command_G1 (const char* command){
      float X = NAN, Y = NAN, Z = NAN, E = NAN, F = NAN;
-     
-     while (*command != '\0')
+
+   while (*command != '\0')
      {
+          char* end = NULL;
           if (*command == 'X' || *command == 'x'){
-               X = parse_GCode_from_string(command + 1);
+               X = strtof(++command,&end);
+               // X = parse_GCode_from_string(command + 1);
           }
           else if (*command == 'Y' || *command == 'y'){
-               Y = parse_GCode_from_string(command + 1);
+                Y = strtof(++command,&end);
+               // Y = parse_GCode_from_string(command + 1);
           }
           else if (*command == 'Z' || *command == 'z'){
-               Z = parse_GCode_from_string(command + 1);
+                Z = strtof(++command,&end);
+               // Z = parse_GCode_from_string(command + 1);
           }
           else if (*command == 'F' || *command == 'f'){
-               F = parse_GCode_from_string(command + 1) / 60;
-               UART_println("F parce: %f",parse_GCode_from_string(command + 1) / 60);
+              command++;
+                F = strtof(++command,&end);
+               // F = parse_GCode_from_string(command + 1) / 60;
+               // UART_println("F parce: %f",parse_GCode_from_string(command + 1) / 60);
           }else if(*command == 'E' || *command == 'e'){
-               E = get_extruder_move(parse_GCode_from_string(command+1));
+              command++;
+                E = strtof(++command,&end);
+               // E = get_extruder_move(parse_GCode_from_string(command+1));
           }
+          if (end == NULL){
           command++;
+          }else{
+              command = end;
+          }
     }
+    
     if (isnan(F)){
           F = iPrinter->speed;
     }else{

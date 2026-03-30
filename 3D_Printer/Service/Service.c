@@ -30,7 +30,7 @@ char* get_value_before_separator(char* strSearch, char* buffer,int bufferSize, c
     return buffer;
 }
 
-float parse_GCode_from_string(const char* str){
+float parse_GCode_from_string(char* str){
     char buffer[20];
     get_value_before_separator(str,buffer,20,' ');
     return string_to_float(buffer);

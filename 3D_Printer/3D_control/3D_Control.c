@@ -30,21 +30,26 @@ void setup_printer()
    
      UART_init(BaudRate);
      UART_set_call_back_RX(add_in_buffer);
-     //   while(1){
-     //      UART_printf("Printer setup sucses!");
-     // }
-     // Write_Crash_log("Test");
-     // iPrinter = malloc(sizeof(ThreeD_Printer));
-     // if (iPrinter == NULL)
-     // {
-     //      panic("Printer allocation memory error!");
-     // }
-     // memset((void *)iPrinter, 0, sizeof(ThreeD_Printer));
 
      iPrinter->NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
      iPrinter->BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
      iPrinter->flowrate = 100;
      iPrinter->feedrate = 100;
+
+
+     eeprom_read_block(&iPrinter->settings,&settings_eeprom,sizeof(Settings));
+
+     //EEPROM
+     if(iPrinter->settings.steps_to_mm_X == 0){
+          iPrinter->settings.steps_to_mm_X = X_STEPS_MM;
+     }else  if(iPrinter->settings.steps_to_mm_Y == 0){
+          iPrinter->settings.steps_to_mm_Y = Y_STEPS_MM;
+     }else  if(iPrinter->settings.steps_to_mm_Z == 0){
+          iPrinter->settings.steps_to_mm_Z = Z_STEPS_MM;
+     } else  if(iPrinter->settings.steps_to_mm_E == 0){
+          iPrinter->settings.steps_to_mm_E = E_STEPS_MM;
+     }
+
      // Ports setup
      AXES_DDR = 255;
      AXES_PORT = 0; // disable all ports
@@ -60,6 +65,9 @@ void setup_printer()
      iPrinter->Steps.speedAtE = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / E_STEPS_MM;
      iPrinter->Steps.speedAtZ = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / Z_STEPS_MM;
      iPrinter->speed = StandartSpeed;
+     
+     
+     
      ADC_Init();
      PWM_timer_init();               // timer 0
      init_axes_timer();              // timer 1
@@ -168,6 +176,8 @@ void execute_command(char* command)
                UART_send_command(EndOfData, M_Width, SIZE_X_MM);
                UART_send_command(EndOfData, M_Length, SIZE_Y_MM);
                UART_send_command(EndOfData, M_Height, SIZE_Z_MM);
+
+               UART_send_command(EndOfData,MyKey,iPrinter->settings.UniqueKey);
           }else if(strcasestr(command,"DebugMode")){
                int mode;
                if(sscanf(command,DebugMode,&mode) == 1){
@@ -176,6 +186,12 @@ void execute_command(char* command)
                    }else{
                     iPrinter->Flags &= ~(1 << FlagDebug);
                    }
+               }
+          }else if(strstr(command,SetKey)){
+               char buf[9] ={};
+               if(sscanf(command,SetKey,buf) != 0){
+                    strcpy(iPrinter->settings.UniqueKey,buf);
+                    save_setting();
                }
           }else{
                log_warning("command not defined:%s",command);
@@ -698,6 +714,9 @@ inline void execute_MCode(const char *command)
                iPrinter->flowrate = flow;
           ;break;
 
+     case M92:
+          
+
      case M486:break;
      case M73: break;
      case M201:break;
@@ -728,7 +747,8 @@ inline void heat_bed_command(const char *command, uint8_t wait)
      {
           if (*command == 'S' || *command == 's')
           {
-               tempBed = parse_GCode_from_string(command + 1);
+               // tempBed = parse_GCode_from_string(command + 1);
+               tempBed = strtof(++command,NULL);
                break;
           }
           command++;
@@ -747,7 +767,7 @@ inline void heat_nozzle_command(const char *command, uint16_t wait)
      {
           if (*command == 'S' || *command == 's')
           {
-               NozzleTemp = parse_GCode_from_string(command + 1);
+               NozzleTemp = strtof(++command,NULL);
                break;
           }
           command++;

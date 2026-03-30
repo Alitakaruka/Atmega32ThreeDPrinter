@@ -16,6 +16,8 @@
 
 //////////////////////////////////////////////////To the printer
 #define Identification "Identification"
+#define SetKey "SetKey:%s"
+
 // #define StopPrint            "!_"
 // #define GetAllInformation    "#_"
 // #define GetBaseInformation   "&_"
@@ -35,6 +37,7 @@
 #define STOP 112
 #define GetPosition 114
 #define GetVersion 115
+
 
 ///////////////////////////////////////////////////From the printer
 #define M_PositionX          "X:%f"
@@ -63,6 +66,8 @@
 #define SwitchHasLight  "HasLight:"
 #define SwitchRGBLight  "RGBLight:"
 #define SYNC            "SYNC"
+#define MyKey "UniqueKey:%s"
+
 
 #define DebugMode "DebugMode:%d"
 
@@ -87,6 +92,8 @@
 
 #define M82 82
 #define M83 83
+
+#define M92 92
 
 #define M140 140
 #define M190 190
@@ -118,7 +125,6 @@
 #define M32 "M32"
 #define M80 "M80"
 #define M81 "M81"
-#define M92 "M92" //TODO
 #define M110 "M110"
 #define M119 "M119" //TODO
 #define M200 "M200"//todo

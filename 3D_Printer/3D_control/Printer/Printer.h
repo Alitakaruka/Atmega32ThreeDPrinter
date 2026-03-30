@@ -2,6 +2,8 @@
 #define PRINTER_H
 #include <RingBuffer/RingBuffer.h>
 #include <3D_control/PIDR/PIDR.h>
+#include <avr/eeprom.h>
+
 
 typedef struct Position
 {
@@ -10,6 +12,17 @@ typedef struct Position
     float Z; 
     float E;
 } Position;
+
+
+typedef struct Settings{
+    char UniqueKey[9];
+    int steps_to_mm_X;
+    int steps_to_mm_Y;
+    int steps_to_mm_Z;
+    int steps_to_mm_E;
+}Settings;
+
+Settings EEMEM settings_eeprom;
 
 typedef struct Steps
 {
@@ -36,6 +49,9 @@ typedef struct Steps
 typedef struct
 {
     volatile Buffio buffio;
+
+    Settings settings;
+
     volatile uint8_t Flags;
     PIDR* NozzlePID;
     PIDR* BedPID;
