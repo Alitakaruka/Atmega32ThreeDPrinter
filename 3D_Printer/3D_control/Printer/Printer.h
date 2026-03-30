@@ -22,7 +22,7 @@ typedef struct Settings{
     int steps_to_mm_E;
 }Settings;
 
-Settings EEMEM settings_eeprom;
+static Settings EEMEM settings_eeprom;
 
 typedef struct Steps
 {
