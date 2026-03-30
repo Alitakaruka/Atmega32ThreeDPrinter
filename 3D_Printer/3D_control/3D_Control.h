@@ -79,7 +79,7 @@ void add_in_buffer(char byte);
 
 
 //EEPROM
-void save_setting(){
+static inline void save_setting(){
      eeprom_write_block(&iPrinter->settings,&settings_eeprom,sizeof(Settings));
 }
 
