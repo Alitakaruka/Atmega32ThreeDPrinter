@@ -12,7 +12,7 @@
 #define Debug_Flag8          UART_println("8")
 #define EndOfData            "\r\n"
 // #define EndcommandByte        ';'
-#define UnknownValue         "__"
+// #define UnknownValue         "__"
 
 //////////////////////////////////////////////////To the printer
 #define Identification "Identification"
@@ -62,7 +62,7 @@
 #define M_Height             "M_Height:%d"
 #define DEVICE_CHIP_NAME     "Device_chip_name:%s"
 
-#define SwitchTimeout  "Switch_Timeout:"
+#define SwitchTimeout   "Switch_Timeout:"
 #define SwitchHasLight  "HasLight:"
 #define SwitchRGBLight  "RGBLight:"
 #define SYNC            "SYNC"
@@ -71,11 +71,11 @@
 
 #define DebugMode "DebugMode:%d"
 
-#define I_DidntDefCommand    "!_%s"
-#define It_UnsuportedCommand "@_%s"
+// #define I_DidntDefCommand    "!_%s"
+// #define It_UnsuportedCommand "@_%s"
 #define ACK                    "ok"
-#define CommandImHere        "*_"
-#define ClearBuffer           "!!!!!"
+// #define CommandImHere        "*_"
+// #define ClearBuffer           "!!!!!"
 ////////////////////////////////////////////////////GCode
 #define G0  0 //Fast move 
 #define G1  1 //move

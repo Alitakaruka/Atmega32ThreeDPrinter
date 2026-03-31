@@ -20,9 +20,17 @@ typedef struct Settings{
     int steps_to_mm_Y;
     int steps_to_mm_Z;
     int steps_to_mm_E;
+    float z_offset;
 }Settings;
 
+typedef struct
+{
+    char CustomName[25];
+}BaseSettings;
+
+
 static Settings EEMEM settings_eeprom;
+static BaseSettings EEMEM BaseSettings_eeprom;
 
 typedef struct Steps
 {
@@ -57,13 +65,10 @@ typedef struct
     PIDR* BedPID;
     int tempNozzle;
     int tempBed;
-    // int NeedTempNozzle;
-    // uint8_t NeedTempBed;
 
     float flowrate;
     uint8_t feedrate;
     float speed;
-
 
     uint8_t fan1;
     uint8_t fan2;

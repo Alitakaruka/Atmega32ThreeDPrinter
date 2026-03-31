@@ -50,6 +50,13 @@ void setup_printer()
           iPrinter->settings.steps_to_mm_E = E_STEPS_MM;
      }
 
+     BaseSettings Set = {}; 
+     eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+     if (strlen(Set.CustomName)==0){
+          strcpy(Set.CustomName,PrinterName);
+          eeprom_write_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+     }
+
      // Ports setup
      AXES_DDR = 255;
      AXES_PORT = 0; // disable all ports
@@ -91,7 +98,7 @@ void setup_printer()
      "Length:%d\n"
      "Height:%d\n"
      "Max command len:%d",
-     PrinterName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
+     Set.CustomName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
 
      log_information("Free ram:%d",free_memory());
 }
@@ -169,7 +176,10 @@ void execute_command(char* command)
           }
           else if (strcasestr(command, Identification))
           {
-               UART_send_command(EndOfData,M_Name,PrinterName);
+               BaseSettings Set = {}; 
+               eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+     
+               UART_send_command(EndOfData,M_Name,Set.CustomName);
                UART_send_command(EndOfData,M_Type, PrinterType);
                UART_send_command(EndOfData,DEVICE_CHIP_NAME,ChipName);
                // XYZ
@@ -572,17 +582,17 @@ uint8_t stepTimersNull()
 
 /////////////////////////////Gcode and commands ++
 
-void send_base_inforamtion()
-{
-     char data[] = PrinterName;
-     UART_send_command(EndOfData, M_Name, PrinterName);
-     UART_send_command(EndOfData, M_Type, PrinterType);
+// void send_base_inforamtion()
+// {
+//      char data[] = PrinterName;
+//      UART_send_command(EndOfData, M_Name, PrinterName);
+//      UART_send_command(EndOfData, M_Type, PrinterType);
 
-     // SIZE
-     UART_send_command(EndOfData, M_Width, SIZE_X_MM);
-     UART_send_command(EndOfData, M_Height, SIZE_Y_MM);
-     UART_send_command(EndOfData, M_Length, SIZE_Z_MM);
-}
+//      // SIZE
+//      UART_send_command(EndOfData, M_Width, SIZE_X_MM);
+//      UART_send_command(EndOfData, M_Height, SIZE_Y_MM);
+//      UART_send_command(EndOfData, M_Length, SIZE_Z_MM);
+// }
 
 void send_cur_information()
 {

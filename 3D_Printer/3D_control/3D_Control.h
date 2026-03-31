@@ -294,36 +294,43 @@ static inline void command_G4(const char* command){
 //  }
  
 static inline void Command_G10(char* command){
-     float E,F = 0;
+     float E,F = NAN;
      while(*command != '\0'){
+          char* end = NULL;
           if(*command == 'E'){
-               E = parse_GCode_from_string(command + 1);
+               E = strtof(++command,&end);
+               // E = parse_GCode_from_string(command + 1);
           }else if(*command == 'F'){
-               F = parse_GCode_from_string(command +1);
+               F = strtof(++command,&end);
+               // F = parse_GCode_from_string(command +1);
           }
           command++;
      }
-     if(E == 0 && F==0){return;}
+     if(isnan(E)){return;}
 
-     if(F == 0){
-          F = StandartSpeed;
+     if(isnan(F)){
+          F = iPrinter->speed;
      }
      move(0,0,0,E,F);
 } //retract
 static inline void Command_G11 (char* command){
-     float E,F = 0;
+     float E,F = NAN;
+
      while(*command != '\0'){
+          char* end = NULL;
           if(*command == 'E'){
-               E = parse_GCode_from_string(command + 1);
+               E = strtof(++command,&end);
+               // E = parse_GCode_from_string(command + 1);
           }else if(*command == 'F'){
-               F = parse_GCode_from_string(command +1);
+               F = strtof(++command,&end);
+               // F = parse_GCode_from_string(command +1);
           }
           command++;
      }
-     if(E == 0 && F==0){return;}
+     if(isnan(E)){return;}
 
-     if(F == 0){
-          F = StandartSpeed;
+     if(isnan(F)){
+          F = iPrinter->speed;
      }
      move(0,0,0,-E,F);
 }
