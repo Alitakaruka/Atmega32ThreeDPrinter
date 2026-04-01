@@ -1,5 +1,8 @@
 #ifndef PRINTER_H
 #define PRINTER_H
+#define SETTINGS_MAGIC 0xBEEF
+
+
 #include <RingBuffer/RingBuffer.h>
 #include <3D_control/PIDR/PIDR.h>
 #include <avr/eeprom.h>
