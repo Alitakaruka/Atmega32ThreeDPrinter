@@ -57,6 +57,7 @@ void setup_printer()
      if (Set.magic != SETTINGS_MAGIC) {
           Set.magic = SETTINGS_MAGIC;
           strncpy(Set.CustomName, PrinterName,sizeof(Set.CustomName) -1);
+          Set.CustomName[sizeof(Set.CustomName)-1]= '\0';
           eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
      }
 
