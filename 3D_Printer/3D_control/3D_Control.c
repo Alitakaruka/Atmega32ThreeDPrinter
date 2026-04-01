@@ -57,7 +57,7 @@ void setup_printer()
      if (Set.magic != SETTINGS_MAGIC) {
           Set.magic = SETTINGS_MAGIC;
           strncpy(Set.CustomName, PrinterName,sizeof(Set.CustomName) -1);
-          Set.CustomName[sizeof(Set.CustomName)-1]= '\0';
+          // Set.CustomName[sizeof(Set.CustomName)-1]= '\0';
           eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
      }
 
@@ -102,7 +102,7 @@ void setup_printer()
      "Length:%d\n"
      "Height:%d\n"
      "Max command len:%d",
-     Set.CustomName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
+     PrinterName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
 
      // log_information("Free ram:%d",free_memory());
 }
