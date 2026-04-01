@@ -52,7 +52,7 @@ void setup_printer()
 
      BaseSettings Set; 
 
-     eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+     // eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
      // if (Set.magic != SETTINGS_MAGIC) {
      //      Set.magic = SETTINGS_MAGIC;
      //      strncpy(Set.CustomName, PrinterName,23);
@@ -103,7 +103,7 @@ void setup_printer()
      "Max command len:%d",
      PrinterName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
 
-     // log_information("Free ram:%d",free_memory());
+     log_information("Free ram:%d",free_memory());
 }
 
 void printer_serve()
