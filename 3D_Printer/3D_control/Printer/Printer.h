@@ -25,6 +25,7 @@ typedef struct Settings{
 
 typedef struct
 {
+    uint32_t magic;
     char CustomName[25];
 }BaseSettings;
 

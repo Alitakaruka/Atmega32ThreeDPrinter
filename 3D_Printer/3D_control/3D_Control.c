@@ -52,9 +52,10 @@ void setup_printer()
 
      BaseSettings Set = {}; 
      eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
-     if (strlen(Set.CustomName)==0){
-          strcpy(Set.CustomName,PrinterName);
-          eeprom_write_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+     if (Set.magic != SETTINGS_MAGIC) {
+          Set.magic = SETTINGS_MAGIC;
+          strcpy(Set.CustomName, PrinterName);
+          eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
      }
 
      // Ports setup
