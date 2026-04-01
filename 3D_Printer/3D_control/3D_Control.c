@@ -106,15 +106,17 @@ void setup_printer()
 
 void printer_serve()
 {
+     log_information("Serve");
      while (1)
      {
           if (!Buffio_isEmpty(&(iPrinter->buffio))){
+               log_success("Is empty");
                char CurrentCommand[MaxCommandLen] = {};
                if (Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
                     sizeof(CurrentCommand), EndOfData)== -1){ 
                            if((iPrinter->Flags & (1 <<FlagDebug)) != 0){
                               log_error("Max command len!");
-     }     
+                }     
                     panic("Max command len error!");
                }
                execute_command(CurrentCommand);
