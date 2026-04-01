@@ -1,6 +1,6 @@
 #ifndef PRINTER_H
 #define PRINTER_H
-#define SETTINGS_MAGIC 0xBEEF
+#define SETTINGS_MAGIC 0xBEEA
 
 
 #include <RingBuffer/RingBuffer.h>
