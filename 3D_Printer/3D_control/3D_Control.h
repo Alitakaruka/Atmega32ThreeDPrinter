@@ -28,7 +28,7 @@ extern volatile uint16_t StepsSleepTimeout;
 extern volatile uint16_t PID_CALIB_TIME;
 
 // static char RX_Buffer[RX_Buffer_SIZE];
-extern volatile ThreeD_Printer* iPrinter; 
+extern volatile ThreeD_Printer iPrinter; 
 
 void setup_printer();
 void printer_serve();
@@ -80,7 +80,7 @@ void add_in_buffer(char byte);
 
 //EEPROM
 static inline void save_setting(){
-     eeprom_write_block(&iPrinter->settings,&settings_eeprom,sizeof(Settings));
+     eeprom_write_block(&iPrinter.settings,&settings_eeprom,sizeof(Settings));
 }
 
 //temp
@@ -148,10 +148,10 @@ inline float sque(float value){
 //           F = MaxSpeedMMS;
 //      }
 
-//      if(iPrinter->Flags & (1 << FlagIsAbsalute)){
-//           X = X-iPrinter->CurrentPosition.X;
-//           Y = X-iPrinter->CurrentPosition.Y;
-//           Z = X-iPrinter->CurrentPosition.Z;
+//      if(iPrinter.Flags & (1 << FlagIsAbsalute)){
+//           X = X-iPrinter.CurrentPosition.X;
+//           Y = X-iPrinter.CurrentPosition.Y;
+//           Z = X-iPrinter.CurrentPosition.Z;
 //     }
    
 //     move(X, Y, Z, 0, F);
@@ -192,35 +192,35 @@ static inline void command_G1 (const char* command){
     }
     
     if (isnan(F)){
-          F = iPrinter->speed;
+          F = iPrinter.speed;
     }else{
-          iPrinter->speed = F;
+          iPrinter.speed = F;
     }
     log_information("F:%f",F);
-    log_information("iPrinter->speed:%f",iPrinter->speed);
-    log_information("iPrinter->feedrate:%d",iPrinter->feedrate);
+    log_information("iPrinter.speed:%f",iPrinter.speed);
+    log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
 
-   F = F * ((float)(iPrinter->feedrate) / 100.0f);
+   F = F * ((float)(iPrinter.feedrate) / 100.0f);
     log_information("F:%d",F);
-    log_information("iPrinter->speed:%f",iPrinter->speed);
-    log_information("iPrinter->feedrate:%d",iPrinter->feedrate);
+    log_information("iPrinter.speed:%f",iPrinter.speed);
+    log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
 
 
-   if(iPrinter->Flags & (1 << FlagIsAbsalute)){
-          X =  (!isnan(X) ? X-iPrinter->CurrentPosition.X: 0);
-          Y =  (!isnan(Y)  ?  Y-iPrinter->CurrentPosition.Y: 0);
-          Z =  (!isnan(Z) ? Z-iPrinter->CurrentPosition.Z: 0);
+   if(iPrinter.Flags & (1 << FlagIsAbsalute)){
+          X =  (!isnan(X) ? X-iPrinter.CurrentPosition.X: 0);
+          Y =  (!isnan(Y)  ?  Y-iPrinter.CurrentPosition.Y: 0);
+          Z =  (!isnan(Z) ? Z-iPrinter.CurrentPosition.Z: 0);
    }else{
      X = (isnan(X) ? 0 : X);
      Y = (isnan(Y) ? 0 : Y);
      Z = (isnan(Z) ? 0 : Z);
    }
-    if (iPrinter->Flags &(1 << FlagExtruderIsAbsalute)){
-          E = (!isnan(E) ? E-iPrinter->CurrentPosition.E: 0);
+    if (iPrinter.Flags &(1 << FlagExtruderIsAbsalute)){
+          E = (!isnan(E) ? E-iPrinter.CurrentPosition.E: 0);
     }else{
           E = (isnan(E) ? 0: E);
     }
-    E = E* ((float)(iPrinter->flowrate)/ 100.0f);
+    E = E* ((float)(iPrinter.flowrate)/ 100.0f);
     move(X, Y, Z, E, F);
 }
 
@@ -231,8 +231,8 @@ static inline void command_G4(const char* command){
     //      if(strcasestr(split[i],"F")){
     //          int delay = atoi(split[i]+1);
     //           for(int i = 0; i < delay; i++){
-    //                if (!(iPrinter->Flags & (1 << FlagISleep))){
-    //                     iPrinter->Flags|= (1 << FlagISleep);
+    //                if (!(iPrinter.Flags & (1 << FlagISleep))){
+    //                     iPrinter.Flags|= (1 << FlagISleep);
     //                }
     //                Await();
     //           }
@@ -246,46 +246,46 @@ static inline void command_G4(const char* command){
 //      for (int P = 1; P != 10; P++){
 //          for(int I = 1; I != 10; I++){
 //              for(int D = 1;D!= 10; D++){
-//                iPrinter->NozzlePID->proportionallyCoef = P;
-//                iPrinter->NozzlePID->integralCoef = I;
-//                iPrinter->NozzlePID->differinialCoef = D;
-//                iPrinter->BedPID->proportionallyCoef = P;
-//                iPrinter->BedPID->integralCoef = I;
-//                iPrinter->BedPID->differinialCoef = D;
-//                iPrinter->Flags &= ~(1 << FlagColibrationPID);
+//                iPrinter.NozzlePID->proportionallyCoef = P;
+//                iPrinter.NozzlePID->integralCoef = I;
+//                iPrinter.NozzlePID->differinialCoef = D;
+//                iPrinter.BedPID->proportionallyCoef = P;
+//                iPrinter.BedPID->integralCoef = I;
+//                iPrinter.BedPID->differinialCoef = D;
+//                iPrinter.Flags &= ~(1 << FlagColibrationPID);
 //                PID_CALIB_TIME =0;
-//                iPrinter->NozzlePID->needValue = 200;
-//                iPrinter->BedPID->needValue = 50;
+//                iPrinter.NozzlePID->needValue = 200;
+//                iPrinter.BedPID->needValue = 50;
 //                int maxN,maxB,midleN,MidleB = 0;
 //                uint32_t CounterN,CounterB = 0;
 
-//                while(!((iPrinter->Flags) & (1 << FlagColibrationPID))){
+//                while(!((iPrinter.Flags) & (1 << FlagColibrationPID))){
 //                     CounterN++;
 //                     CounterB++;
-//                     if(iPrinter->NozzlePID->needValue - iPrinter->tempNozzle < maxN){
-//                          maxN = (iPrinter->NozzlePID->needValue - iPrinter->tempNozzle < 0) ? 
-//                          iPrinter->NozzlePID->needValue - iPrinter->tempNozzle : 
-//                          iPrinter->NozzlePID->needValue - iPrinter->tempNozzle *-1;
+//                     if(iPrinter.NozzlePID->needValue - iPrinter.tempNozzle < maxN){
+//                          maxN = (iPrinter.NozzlePID->needValue - iPrinter.tempNozzle < 0) ? 
+//                          iPrinter.NozzlePID->needValue - iPrinter.tempNozzle : 
+//                          iPrinter.NozzlePID->needValue - iPrinter.tempNozzle *-1;
 //                     }    
-//                     midleN = (uint32_t)midleN *((float)iPrinter->tempNozzle/(float)CounterN) ;
-//                     MidleB = (uint32_t)MidleB *((float)iPrinter->tempBed/(float)CounterB) ;
-//                     if(iPrinter->BedPID->needValue - iPrinter->tempBed < maxN){
-//                          maxN = (iPrinter->BedPID->needValue - iPrinter->tempBed < 0) ? 
-//                          iPrinter->BedPID->needValue - iPrinter->tempBed : 
-//                          iPrinter->BedPID->needValue - iPrinter->tempBed *-1;
+//                     midleN = (uint32_t)midleN *((float)iPrinter.tempNozzle/(float)CounterN) ;
+//                     MidleB = (uint32_t)MidleB *((float)iPrinter.tempBed/(float)CounterB) ;
+//                     if(iPrinter.BedPID->needValue - iPrinter.tempBed < maxN){
+//                          maxN = (iPrinter.BedPID->needValue - iPrinter.tempBed < 0) ? 
+//                          iPrinter.BedPID->needValue - iPrinter.tempBed : 
+//                          iPrinter.BedPID->needValue - iPrinter.tempBed *-1;
 //                     }    
 //                     Await();
 //                }
 //                PID_CALIB_TIME =0;
-//                PIDR_set_need_value(iPrinter->NozzlePID,0);
-//                PIDR_set_need_value(iPrinter->BedPID,0);
+//                PIDR_set_need_value(iPrinter.NozzlePID,0);
+//                PIDR_set_need_value(iPrinter.BedPID,0);
 //                UART_printf("calib with P:%d,I:%d,D:%d complete;",P,I,D);
 //                UART_printf("results:maxNozzle:%d, maxBed:%d;",maxN,maxB);
 //                UART_printf("MidleNozzle:%d, MidleBed:%d;",midleN,MidleB);
 //                //Cooling
 
-//                  iPrinter->Flags &= ~(1 << FlagColibrationPID);
-//                  while(!(iPrinter->Flags) & (1 << FlagColibrationPID)){
+//                  iPrinter.Flags &= ~(1 << FlagColibrationPID);
+//                  while(!(iPrinter.Flags) & (1 << FlagColibrationPID)){
                     
 //                  }
 //              }
@@ -309,7 +309,7 @@ static inline void Command_G10(char* command){
      if(isnan(E)){return;}
 
      if(isnan(F)){
-          F = iPrinter->speed;
+          F = iPrinter.speed;
      }
      move(0,0,0,E,F);
 } //retract
@@ -330,17 +330,17 @@ static inline void Command_G11 (char* command){
      if(isnan(E)){return;}
 
      if(isnan(F)){
-          F = iPrinter->speed;
+          F = iPrinter.speed;
      }
      move(0,0,0,-E,F);
 }
 void home_position(); //G28
 
 static inline void Command_G90 (){
-     iPrinter->Flags |= (1 << FlagIsAbsalute);
+     iPrinter.Flags |= (1 << FlagIsAbsalute);
 }//set absolute coord
 static inline void Command_G91 (){
-     iPrinter->Flags &= ~(1 << FlagIsAbsalute);
+     iPrinter.Flags &= ~(1 << FlagIsAbsalute);
 }
 static inline void Command_G92(char *command)
 {
@@ -361,10 +361,10 @@ static inline void Command_G92(char *command)
           }
           command++;
      }
-     iPrinter->CurrentPosition.X = (X == -1) ? iPrinter->CurrentPosition.X : X;
-     iPrinter->CurrentPosition.Y = (Y == -1) ? iPrinter->CurrentPosition.Y : Y;
-     iPrinter->CurrentPosition.Z = (Z == -1) ? iPrinter->CurrentPosition.Z : Z;
-     iPrinter->CurrentPosition.E = (E == -1) ? iPrinter->CurrentPosition.E : E;
+     iPrinter.CurrentPosition.X = (X == -1) ? iPrinter.CurrentPosition.X : X;
+     iPrinter.CurrentPosition.Y = (Y == -1) ? iPrinter.CurrentPosition.Y : Y;
+     iPrinter.CurrentPosition.Z = (Z == -1) ? iPrinter.CurrentPosition.Z : Z;
+     iPrinter.CurrentPosition.E = (E == -1) ? iPrinter.CurrentPosition.E : E;
 }
 //Gcode--
 
@@ -372,7 +372,7 @@ static inline void Command_G92(char *command)
 static inline void heat_bed_command(const char* command,uint8_t wait); //M140 | M190
 static inline void heat_nozzle_command(const char* command,uint16_t wait);//M104 | M109
 static inline void Command_M82(){ //set absolute extruder mode
-    iPrinter->Flags |= (1 << FlagExtruderIsAbsalute);
+    iPrinter.Flags |= (1 << FlagExtruderIsAbsalute);
 }
 extern void send_all_information();
 extern void send_base_inforamtion();
@@ -382,7 +382,7 @@ extern void set_light(uint8_t R,uint8_t G,uint8_t B);
 extern void blickLight(uint8_t R,uint8_t G,uint8_t B);
 
 static inline void Command_M83(){
-    iPrinter->Flags &= ~(1 << FlagExtruderIsAbsalute);
+    iPrinter.Flags &= ~(1 << FlagExtruderIsAbsalute);
 }
 static inline void enable_steps(){ //M17
      EndStopsAndAnableStepsPORT &= ~(1 << StepStatePin);
@@ -406,9 +406,9 @@ static inline void set_fan_value(const char* command){
      }
      UART_printf("Fan value:%d",value);
      if(NumberFan == 1){
-          iPrinter->fan1 = value;
+          iPrinter.fan1 = value;
      }else if(NumberFan = 2){
-          iPrinter->fan2 = value;
+          iPrinter.fan2 = value;
      }
 }
 
@@ -422,9 +422,9 @@ static inline void diasble_fan(const char* command){
           command++;
      }
      if(NumberFan == 1){
-          iPrinter->fan1 = 0;
+          iPrinter.fan1 = 0;
      }else if(NumberFan = 2){
-          iPrinter->fan2 = 0;
+          iPrinter.fan2 = 0;
      }
 }
 //MCode--

@@ -1,6 +1,6 @@
 #include "3D_Control.h"
 
-static ThreeD_Printer iPrinter = {};
+volatile ThreeD_Printer iPrinter = {};
 
 // ThreeD_Printer volatile *iPrinter = NULL;
 
