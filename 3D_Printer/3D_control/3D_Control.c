@@ -56,7 +56,7 @@ void setup_printer()
      eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
      if (Set.magic != SETTINGS_MAGIC) {
           Set.magic = SETTINGS_MAGIC;
-          strncpy(Set.CustomName, PrinterName,strlen(PrinterName));
+          strncpy(Set.CustomName, PrinterName,sizeof(Set.CustomName) -1);
           eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
      }
 
