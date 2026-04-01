@@ -65,8 +65,8 @@ typedef struct
     Settings settings;
 
     volatile uint8_t Flags;
-    PIDR* NozzlePID;
-    PIDR* BedPID;
+    PIDR NozzlePID;
+    PIDR BedPID;
     int tempNozzle;
     int tempBed;
 

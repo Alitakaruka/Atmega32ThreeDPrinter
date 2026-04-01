@@ -1,7 +1,6 @@
 #include "3D_Control.h"
 
-static ThreeD_Printer printer = {};
-volatile ThreeD_Printer* iPrinter = &printer;
+static ThreeD_Printer iPrinter = {};
 
 // ThreeD_Printer volatile *iPrinter = NULL;
 
@@ -30,24 +29,24 @@ void setup_printer()
    
      UART_init(BaudRate);
      UART_set_call_back_RX(add_in_buffer);
-     memset(iPrinter,0,sizeof(ThreeD_Printer));
-     iPrinter->NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
-     iPrinter->BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
-     iPrinter->flowrate = 100;
-     iPrinter->feedrate = 100;
+     // memset(iPrinter,0,sizeof(ThreeD_Printer));
+     iPrinter.NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
+     iPrinter.BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
+     iPrinter.flowrate = 100;
+     iPrinter.feedrate = 100;
 
 
-     eeprom_read_block(&iPrinter->settings,&settings_eeprom,sizeof(Settings));
+     eeprom_read_block(&iPrinter.settings,&settings_eeprom,sizeof(Settings));
 
      //EEPROM
-     if(iPrinter->settings.steps_to_mm_X == 0){
-          iPrinter->settings.steps_to_mm_X = X_STEPS_MM;
-     }else  if(iPrinter->settings.steps_to_mm_Y == 0){
-          iPrinter->settings.steps_to_mm_Y = Y_STEPS_MM;
-     }else  if(iPrinter->settings.steps_to_mm_Z == 0){
-          iPrinter->settings.steps_to_mm_Z = Z_STEPS_MM;
-     } else  if(iPrinter->settings.steps_to_mm_E == 0){
-          iPrinter->settings.steps_to_mm_E = E_STEPS_MM;
+     if(iPrinter.settings.steps_to_mm_X == 0){
+          iPrinter.settings.steps_to_mm_X = X_STEPS_MM;
+     }else  if(iPrinter.settings.steps_to_mm_Y == 0){
+          iPrinter.settings.steps_to_mm_Y = Y_STEPS_MM;
+     }else  if(iPrinter.settings.steps_to_mm_Z == 0){
+          iPrinter.settings.steps_to_mm_Z = Z_STEPS_MM;
+     } else  if(iPrinter.settings.steps_to_mm_E == 0){
+          iPrinter.settings.steps_to_mm_E = E_STEPS_MM;
      }
 
      BaseSettings Set = {}; 
@@ -68,11 +67,11 @@ void setup_printer()
      EndStopsAndAnableStepsDDR |= (1 << StepStatePin);
      LedPort |= (1 << LedPin);
      // Max time interval for timer and max speed
-     iPrinter->Steps.speedAtY = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / Y_STEPS_MM;
-     iPrinter->Steps.speedAtX = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / X_STEPS_MM;
-     iPrinter->Steps.speedAtE = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / E_STEPS_MM;
-     iPrinter->Steps.speedAtZ = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / Z_STEPS_MM;
-     iPrinter->speed = StandartSpeed;
+     iPrinter.Steps.speedAtY = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / Y_STEPS_MM;
+     iPrinter.Steps.speedAtX = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / X_STEPS_MM;
+     iPrinter.Steps.speedAtE = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / E_STEPS_MM;
+     iPrinter.Steps.speedAtZ = (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) / Z_STEPS_MM;
+     iPrinter.speed = StandartSpeed;
      
      
      
@@ -85,7 +84,7 @@ void setup_printer()
      sei();
      enable_steps();
 
-     iPrinter->fan2 = 255; // radiator fan is enable (M106 && M107 control him)
+     iPrinter.fan2 = 255; // radiator fan is enable (M106 && M107 control him)
      // For user
      blickLight(0, 255, 0); //
      //
@@ -109,12 +108,12 @@ void printer_serve()
      log_information("Serve");
      while (1)
      {
-          if (!Buffio_isEmpty(&(iPrinter->buffio))){
+          if (!Buffio_isEmpty(&(iPrinter.buffio))){
                log_success("Is empty");
                char CurrentCommand[MaxCommandLen] = {};
-               if (Buffio_ReadLine(&(iPrinter->buffio), CurrentCommand,
+               if (Buffio_ReadLine(&(iPrinter.buffio), CurrentCommand,
                     sizeof(CurrentCommand), EndOfData)== -1){ 
-                           if((iPrinter->Flags & (1 <<FlagDebug)) != 0){
+                           if((iPrinter.Flags & (1 <<FlagDebug)) != 0){
                               log_error("Max command len!");
                 }     
                     panic("Max command len error!");
@@ -131,7 +130,7 @@ void printer_serve()
 
 void add_in_buffer(char byte)
 {
-     if (Buffio_WriteByte(&(iPrinter->buffio), byte) != 1)
+     if (Buffio_WriteByte(&(iPrinter.buffio), byte) != 1)
      {
           panic("buffer overflow!");
      }
@@ -150,13 +149,13 @@ void set_light(uint8_t R, uint8_t G, uint8_t B)
 }
 void execute_command(char* command)
 {
-     if((iPrinter->Flags & (1 <<FlagDebug)) != 0){
+     if((iPrinter.Flags & (1 <<FlagDebug)) != 0){
           log_information("Start executing command:%s",command);     
           log_information("Command len:%d",strlen(command));
      }
 
      if (strlen(command) == 0){
-          if (iPrinter->Flags & (1 << FlagDebug)){
+          if (iPrinter.Flags & (1 << FlagDebug)){
                log_warning("Void command!%s");
           }
           return;
@@ -175,7 +174,7 @@ void execute_command(char* command)
           if (strcasestr(command, SYNC))
           {
                UART_send_command(EndOfData,MyBufferLen, commandsBufferSize);
-               memset(&iPrinter->buffio, 0, sizeof(iPrinter->buffio));
+               memset(&iPrinter.buffio, 0, sizeof(iPrinter.buffio));
           }
           else if (strcasestr(command, Identification))
           {
@@ -190,20 +189,20 @@ void execute_command(char* command)
                UART_send_command(EndOfData, M_Length, SIZE_Y_MM);
                UART_send_command(EndOfData, M_Height, SIZE_Z_MM);
 
-               UART_send_command(EndOfData,MyKey,iPrinter->settings.UniqueKey);
+               UART_send_command(EndOfData,MyKey,iPrinter.settings.UniqueKey);
           }else if(strcasestr(command,"DebugMode")){
                int mode;
                if(sscanf(command,DebugMode,&mode) == 1){
                    if(mode){
-                    iPrinter->Flags |= 1 << FlagDebug;
+                    iPrinter.Flags |= 1 << FlagDebug;
                    }else{
-                    iPrinter->Flags &= ~(1 << FlagDebug);
+                    iPrinter.Flags &= ~(1 << FlagDebug);
                    }
                }
           }else if(strstr(command,SetKey)){
                char buf[9] ={};
                if(sscanf(command,SetKey,buf) != 0){
-                    strcpy(iPrinter->settings.UniqueKey,buf);
+                    strcpy(iPrinter.settings.UniqueKey,buf);
                     save_setting();
                }
           }else{
@@ -215,12 +214,12 @@ void execute_command(char* command)
 
 void out_of_range(float X, float Y, float Z, float E)
 {
-     if ((iPrinter->CurrentPosition.X + X > SIZE_X_MM ||
-          iPrinter->CurrentPosition.Y + Y > SIZE_Y_MM ||
-          iPrinter->CurrentPosition.Z + Z > SIZE_Z_MM) ||
-         (iPrinter->CurrentPosition.X + X < 0 ||
-          iPrinter->CurrentPosition.Y + Y < 0 ||
-          iPrinter->CurrentPosition.Z + Z < 0))
+     if ((iPrinter.CurrentPosition.X + X > SIZE_X_MM ||
+          iPrinter.CurrentPosition.Y + Y > SIZE_Y_MM ||
+          iPrinter.CurrentPosition.Z + Z > SIZE_Z_MM) ||
+         (iPrinter.CurrentPosition.X + X < 0 ||
+          iPrinter.CurrentPosition.Y + Y < 0 ||
+          iPrinter.CurrentPosition.Z + Z < 0))
      {
           panic("Out of range!");
      }
@@ -228,10 +227,10 @@ void out_of_range(float X, float Y, float Z, float E)
 
 void UpdateTemps()
 {
-     // iPrinter->tempBed    = convert_ADC_to_bed_temp(ADC_read(TermisterBed));
-     // iPrinter->tempNozzle = convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle));
-     iPrinter->tempBed = (int)((float)iPrinter->tempBed * 0.8 + (float)(convert_ADC_to_bed_temp(ADC_read(TermisterBed)) * 0.2));
-     iPrinter->tempNozzle = (int)((float)iPrinter->tempNozzle * 0.8 + (float)(convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle)) * 0.2));
+     // iPrinter.tempBed    = convert_ADC_to_bed_temp(ADC_read(TermisterBed));
+     // iPrinter.tempNozzle = convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle));
+     iPrinter.tempBed = (int)((float)iPrinter.tempBed * 0.8 + (float)(convert_ADC_to_bed_temp(ADC_read(TermisterBed)) * 0.2));
+     iPrinter.tempNozzle = (int)((float)iPrinter.tempNozzle * 0.8 + (float)(convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle)) * 0.2));
 }
 
 
@@ -243,13 +242,13 @@ ISR(TIMER0_COMP_vect)
      CheckTempTimeout++;
      UATRTimeOut++;
      ProgramPWM += 20;
-     if (!(iPrinter->Flags & (1 << FlagIMove)) &&
+     if (!(iPrinter.Flags & (1 << FlagIMove)) &&
          (StepsSleepTimeout / ticksInSecond) >= STEPS_TIMEOUT_S)
      {
           disable_steps();
           StepsSleepTimeout = 0;
      }
-     if (iPrinter->Flags & (1 << FlagGoHome) &&
+     if (iPrinter.Flags & (1 << FlagGoHome) &&
          HomePositionTimeout / ticksInSecond >= HOME_POSITION_TIMEOUT_S)
      {
           panic("Home position time out!");
@@ -258,15 +257,15 @@ ISR(TIMER0_COMP_vect)
      {
           UpdateTemps();
           CheckTempTimeout = 0;
-          PIDR_calculate_new_value(iPrinter->NozzlePID, iPrinter->tempNozzle, ((float)CheckTempTimeout / ticksInSecond));
-          PIDR_calculate_new_value(iPrinter->BedPID, iPrinter->tempBed, ((float)CheckTempTimeout / ticksInSecond));
+          PIDR_calculate_new_value(&iPrinter.NozzlePID, iPrinter.tempNozzle, ((float)CheckTempTimeout / ticksInSecond));
+          PIDR_calculate_new_value(&iPrinter.BedPID, iPrinter.tempBed, ((float)CheckTempTimeout / ticksInSecond));
      }
      if (UATRTimeOut / ticksInSecond >= UART_Timeout_S)
      {
-          iPrinter->Flags |= (1 << FlagUARTTimeOut);
+          iPrinter.Flags |= (1 << FlagUARTTimeOut);
           UATRTimeOut = 0;
      }
-     if (ProgramPWM < iPrinter->fan1)
+     if (ProgramPWM < iPrinter.fan1)
      {
           PWM_PORT |= (1 << FAN1_CONTROL_PIN);
      }
@@ -274,7 +273,7 @@ ISR(TIMER0_COMP_vect)
      {
           PWM_PORT &= ~(1 << FAN1_CONTROL_PIN);
      }
-     if (ProgramPWM < iPrinter->fan2)
+     if (ProgramPWM < iPrinter.fan2)
      {
           PWM_PORT |= (1 << FAN2_CONTROL_PIN);
      }
@@ -341,45 +340,45 @@ void start_axes_timer()
 
 void handle_Y()
 {
-     if (iPrinter->Steps.nowYsteps == 0)
+     if (iPrinter.Steps.nowYsteps == 0)
      {
           return;
      }
-     iPrinter->Steps.nowYsteps--;
-     // iPrinter->Flags &= ~(1 << FlagYstep);
+     iPrinter.Steps.nowYsteps--;
+     // iPrinter.Flags &= ~(1 << FlagYstep);
      AXES_PORT ^= (1 << Y_STEP_PORT);
 }
 
 void handle_E()
 {
-     if (iPrinter->Steps.nowEsteps == 0)
+     if (iPrinter.Steps.nowEsteps == 0)
      {
           return;
      }
-     iPrinter->Steps.nowEsteps--;
-     // iPrinter->Flags &= ~(1 << FlagEstep);
+     iPrinter.Steps.nowEsteps--;
+     // iPrinter.Flags &= ~(1 << FlagEstep);
      AXES_PORT ^= (1 << E_STEP_PORT);
 }
 
 void handle_Z()
 {
-     if (iPrinter->Steps.nowZsteps == 0)
+     if (iPrinter.Steps.nowZsteps == 0)
      {
           return;
      }
-     iPrinter->Steps.nowZsteps--;
-     // iPrinter->Flags &= ~(1 << FlagZstep);
+     iPrinter.Steps.nowZsteps--;
+     // iPrinter.Flags &= ~(1 << FlagZstep);
      AXES_PORT ^= (1 << Z_STEP_PORT);
 }
 
 void handle_X()
 {
-     if (iPrinter->Steps.nowXsteps == 0)
+     if (iPrinter.Steps.nowXsteps == 0)
      {
           return;
      }
-     iPrinter->Steps.nowXsteps--;
-     // iPrinter->Flags &= ~(1 << FlagXstep);
+     iPrinter.Steps.nowXsteps--;
+     // iPrinter.Flags &= ~(1 << FlagXstep);
      AXES_PORT ^= (1 << X_STEP_PORT);
 }
 
@@ -435,92 +434,92 @@ void set_dir_port_state(uint8_t XDir, uint8_t YDir, uint8_t ZDir, uint8_t EDir)
 
 void bring_steps_to_format()
 {
-     // iPrinter->Steps.nowEsteps = iPrinter->Steps.nowXsteps < 0 ? -iPrinter->Steps.nowXsteps
-     if (iPrinter->Steps.nowXsteps < 0)
-          iPrinter->Steps.nowXsteps = -iPrinter->Steps.nowXsteps;
-     if (iPrinter->Steps.nowYsteps < 0)
-          iPrinter->Steps.nowYsteps = -iPrinter->Steps.nowYsteps;
-     if (iPrinter->Steps.nowEsteps < 0)
-          iPrinter->Steps.nowEsteps = -iPrinter->Steps.nowEsteps;
-     if (iPrinter->Steps.nowZsteps < 0)
-          iPrinter->Steps.nowZsteps = -iPrinter->Steps.nowZsteps;
+     // iPrinter.Steps.nowEsteps = iPrinter.Steps.nowXsteps < 0 ? -iPrinter.Steps.nowXsteps
+     if (iPrinter.Steps.nowXsteps < 0)
+          iPrinter.Steps.nowXsteps = -iPrinter.Steps.nowXsteps;
+     if (iPrinter.Steps.nowYsteps < 0)
+          iPrinter.Steps.nowYsteps = -iPrinter.Steps.nowYsteps;
+     if (iPrinter.Steps.nowEsteps < 0)
+          iPrinter.Steps.nowEsteps = -iPrinter.Steps.nowEsteps;
+     if (iPrinter.Steps.nowZsteps < 0)
+          iPrinter.Steps.nowZsteps = -iPrinter.Steps.nowZsteps;
 }
 
 void home_position()
 { // todo
      // reset steps
-     iPrinter->Steps.nowXsteps = 0;
-     iPrinter->Steps.nowYsteps = 0;
-     iPrinter->Steps.nowZsteps = 0;
-     iPrinter->Steps.nowEsteps = 0;
+     iPrinter.Steps.nowXsteps = 0;
+     iPrinter.Steps.nowYsteps = 0;
+     iPrinter.Steps.nowZsteps = 0;
+     iPrinter.Steps.nowEsteps = 0;
      // TIMSK |= (1 << OCIE0) | (1 << OCIE1A); // turn on timers
      enable_steps();
      start_axes_timer();
      // X
-     X_Timer_Register = get_delay_timer(StandartSpeed, iPrinter->Steps.speedAtX);
+     X_Timer_Register = get_delay_timer(StandartSpeed, iPrinter.Steps.speedAtX);
      set_dir_port_state(0, 0, 0, 1);
      HomePositionTimeout = 0;
-     iPrinter->Flags |= (1 << FlagIMove) | (1 << FlagGoHome);
+     iPrinter.Flags |= (1 << FlagIMove) | (1 << FlagGoHome);
 #if INVERT_X_EDNSTOPS == 1
      while ((EndStopsAndAnableStepsPIN & (1 << EndstopX)) == 0)
      {
-          iPrinter->Steps.nowXsteps = 1;
+          iPrinter.Steps.nowXsteps = 1;
           Await();
      }
 #else
      while ((EndStopsAndAnableStepsPIN & (1 << EndstopX)) != 0)
      {
-          iPrinter->Steps.nowXsteps = 1;
+          iPrinter.Steps.nowXsteps = 1;
           Await();
      }
 #endif
      // Y
      HomePositionTimeout = 0;
-     Y_Timer_Register = get_delay_timer(StandartSpeed, iPrinter->Steps.speedAtY);
+     Y_Timer_Register = get_delay_timer(StandartSpeed, iPrinter.Steps.speedAtY);
 #if INVERT_Y_EDNSTOPS == 1
      while ((EndStopsAndAnableStepsPIN & (1 << EndstopY)) == 0)
      {
-          iPrinter->Steps.nowYsteps = 1;
+          iPrinter.Steps.nowYsteps = 1;
           Await();
      }
 #else
      while ((EndStopsAndAnableStepsPIN & (1 << EndstopY)) != 0)
      {
-          iPrinter->Steps.nowYsteps = 1;
+          iPrinter.Steps.nowYsteps = 1;
           Await();
      }
 #endif
      // Z
      HomePositionTimeout = 0;
-     Z_Timer_Register = get_delay_timer(StandartSpeed, iPrinter->Steps.speedAtZ);
+     Z_Timer_Register = get_delay_timer(StandartSpeed, iPrinter.Steps.speedAtZ);
 #if INVERT_Z_EDNSTOPS == 1
      while ((EndStopsAndAnableStepsPIN & (1 << EndstopZ)) == 0)
      {
-          iPrinter->Steps.nowZsteps = 1;
+          iPrinter.Steps.nowZsteps = 1;
           Await();
      }
 #else
      while ((EndStopsAndAnableStepsPIN & (1 << EndstopZ)) != 0)
      {
-          iPrinter->Steps.nowZsteps = 1;
+          iPrinter.Steps.nowZsteps = 1;
           Await();
      }
 #endif
-     iPrinter->Flags &= ~((1 << FlagGoHome) | (1 << FlagIMove));
+     iPrinter.Flags &= ~((1 << FlagGoHome) | (1 << FlagIMove));
      stop_axes_timer();
 
-     iPrinter->CurrentPosition.X = 0.0;
-     iPrinter->CurrentPosition.Z = 0.0;
-     iPrinter->CurrentPosition.Y = 0.0;
+     iPrinter.CurrentPosition.X = 0.0;
+     iPrinter.CurrentPosition.Z = 0.0;
+     iPrinter.CurrentPosition.Y = 0.0;
 }
 
 void move(float X, float Y, float Z, float E, float speedMMS)
 {
 
-     iPrinter->Steps.nowXsteps = float_to_step(X, X_STEPS_MM);
-     iPrinter->Steps.nowYsteps = float_to_step(Y, Y_STEPS_MM);
-     iPrinter->Steps.nowZsteps = float_to_step(Z, Z_STEPS_MM);
-     iPrinter->Steps.nowEsteps = float_to_step(E, E_STEPS_MM);
+     iPrinter.Steps.nowXsteps = float_to_step(X, X_STEPS_MM);
+     iPrinter.Steps.nowYsteps = float_to_step(Y, Y_STEPS_MM);
+     iPrinter.Steps.nowZsteps = float_to_step(Z, Z_STEPS_MM);
+     iPrinter.Steps.nowEsteps = float_to_step(E, E_STEPS_MM);
      set_dir_port_state(X > 0.0001f, Y > 0.0001f, Z > 0.0001f, E > 0.0001f);
      bring_steps_to_format();
      // The resulting vector is calculated using the Pythagorean theorem from the previous vectors.
@@ -534,10 +533,10 @@ void move(float X, float Y, float Z, float E, float speedMMS)
      {
           speedMMS = MaxSpeedMMS;
      }
-     Y_Timer_Register = get_delay_timer((Y * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtY);
-     X_Timer_Register = get_delay_timer((X * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtX);
-     Z_Timer_Register = get_delay_timer((Z * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtZ);
-     E_Timer_Register = get_delay_timer((E * speedMMS) / resVecXYZE, iPrinter->Steps.speedAtE);
+     Y_Timer_Register = get_delay_timer((Y * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtY);
+     X_Timer_Register = get_delay_timer((X * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtX);
+     Z_Timer_Register = get_delay_timer((Z * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtZ);
+     E_Timer_Register = get_delay_timer((E * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtE);
     
      if (stepTimersNull())
      {
@@ -548,35 +547,35 @@ void move(float X, float Y, float Z, float E, float speedMMS)
      
      enable_steps();
      start_axes_timer();
-     iPrinter->Flags |= (1 << FlagIMove);
-     while (iPrinter->Steps.nowXsteps != 0 || iPrinter->Steps.nowYsteps != 0 || iPrinter->Steps.nowEsteps != 0 || iPrinter->Steps.nowZsteps != 0)
+     iPrinter.Flags |= (1 << FlagIMove);
+     while (iPrinter.Steps.nowXsteps != 0 || iPrinter.Steps.nowYsteps != 0 || iPrinter.Steps.nowEsteps != 0 || iPrinter.Steps.nowZsteps != 0)
      {
           Await();
      }
      stop_axes_timer();
-     iPrinter->Flags &= ~(1 << FlagIMove);
+     iPrinter.Flags &= ~(1 << FlagIMove);
 
-     iPrinter->CurrentPosition.X += X;
-     iPrinter->CurrentPosition.Y += Y;
-     iPrinter->CurrentPosition.Z += Z;
-     iPrinter->CurrentPosition.E += E;
+     iPrinter.CurrentPosition.X += X;
+     iPrinter.CurrentPosition.Y += Y;
+     iPrinter.CurrentPosition.Z += Z;
+     iPrinter.CurrentPosition.E += E;
 }
 
 uint8_t stepTimersNull()
 {
-     if (iPrinter->Steps.nowXsteps && (X_Timer_Register == 0))
+     if (iPrinter.Steps.nowXsteps && (X_Timer_Register == 0))
      {
           return 1;
      }
-     if (iPrinter->Steps.nowYsteps && (Y_Timer_Register == 0))
+     if (iPrinter.Steps.nowYsteps && (Y_Timer_Register == 0))
      {
           return 1;
      }
-     if (iPrinter->Steps.nowZsteps && (Z_Timer_Register == 0))
+     if (iPrinter.Steps.nowZsteps && (Z_Timer_Register == 0))
      {
           return 1;
      }
-     if (iPrinter->Steps.nowEsteps && (E_Timer_Register == 0))
+     if (iPrinter.Steps.nowEsteps && (E_Timer_Register == 0))
      {
           return 1;
      }
@@ -600,15 +599,15 @@ uint8_t stepTimersNull()
 void send_cur_information()
 {
      //Position
-     UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
-     UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
-     UART_send_command(EndOfData, M_PositionZ, iPrinter->CurrentPosition.Z);
+     UART_send_command(EndOfData, M_PositionX, iPrinter.CurrentPosition.X);
+     UART_send_command(EndOfData, M_PositionY, iPrinter.CurrentPosition.Y);
+     UART_send_command(EndOfData, M_PositionZ, iPrinter.CurrentPosition.Z);
      // Temp
-     UART_send_command(EndOfData, BedTemp, iPrinter->tempBed,iPrinter->BedPID->needValue);
-     UART_send_command(EndOfData, ExtruderTemp, iPrinter->tempNozzle,iPrinter->NozzlePID->needValue);
+     UART_send_command(EndOfData, BedTemp, iPrinter.tempBed,iPrinter.BedPID.needValue);
+     UART_send_command(EndOfData, ExtruderTemp, iPrinter.tempNozzle,iPrinter.NozzlePID.needValue);
      //Fans
-     UART_send_command(EndOfData,FanSpeed,1,iPrinter->fan1);     
-     UART_send_command(EndOfData,FanSpeed,2,iPrinter->fan2);     
+     UART_send_command(EndOfData,FanSpeed,1,iPrinter.fan1);     
+     UART_send_command(EndOfData,FanSpeed,2,iPrinter.fan2);     
 }
 
 
@@ -695,8 +694,8 @@ inline void execute_MCode(const char *command)
      case HeatBed:  heat_bed_command(command, 0); break;
      case HeatBedAndwait:  heat_bed_command(command, 1); break;
      case GetTemps:   
-          UART_send_command(EndOfData, BedTemp, iPrinter->tempBed,iPrinter->BedPID->needValue);
-          UART_send_command(EndOfData, ExtruderTemp, iPrinter->tempNozzle,iPrinter->NozzlePID->needValue); 
+          UART_send_command(EndOfData, BedTemp, iPrinter.tempBed,iPrinter.BedPID.needValue);
+          UART_send_command(EndOfData, ExtruderTemp, iPrinter.tempNozzle,iPrinter.NozzlePID.needValue); 
           break;
      case HeatNozzle:  heat_nozzle_command(command, 0); break;
      case HeatNozzleAndWait:  heat_nozzle_command(command, 1); break;
@@ -706,9 +705,9 @@ inline void execute_MCode(const char *command)
           break;
      case STOP:   stop_axes_timer(); break;
      case GetPosition:  
-          UART_send_command(EndOfData, M_PositionX, iPrinter->CurrentPosition.X);
-          UART_send_command(EndOfData, M_PositionY, iPrinter->CurrentPosition.Y);
-          UART_send_command(EndOfData, M_PositionZ, iPrinter->CurrentPosition.Z);
+          UART_send_command(EndOfData, M_PositionX, iPrinter.CurrentPosition.X);
+          UART_send_command(EndOfData, M_PositionY, iPrinter.CurrentPosition.Y);
+          UART_send_command(EndOfData, M_PositionZ, iPrinter.CurrentPosition.Z);
           break;
      case M82:  Command_M82(); break;
      case M83:  Command_M83(); break;
@@ -718,13 +717,13 @@ inline void execute_MCode(const char *command)
      case TurnOfFan:   diasble_fan(command); break;
      case M220: 
           int Mult;
-          if(sscanf(command,"M220 S%d",&(iPrinter->feedrate))){
-               iPrinter->feedrate = Mult;
+          if(sscanf(command,"M220 S%d",&(iPrinter.feedrate))){
+               iPrinter.feedrate = Mult;
           } ;break;
      case M221:  
           int flow;
-          if(sscanf(command,"M221 S%d",&(iPrinter->flowrate)))
-               iPrinter->flowrate = flow;
+          if(sscanf(command,"M221 S%d",&(iPrinter.flowrate)))
+               iPrinter.flowrate = flow;
           ;break;
 
      case M92:
@@ -743,9 +742,9 @@ inline void execute_MCode(const char *command)
 
 float get_extruder_move(float nowMove)
 {
-     if (iPrinter->Flags & (1 << FlagExtruderIsAbsalute))
+     if (iPrinter.Flags & (1 << FlagExtruderIsAbsalute))
      {
-          return nowMove - iPrinter->CurrentPosition.E;
+          return nowMove - iPrinter.CurrentPosition.E;
      }
      else
      {
@@ -766,8 +765,8 @@ inline void heat_bed_command(const char *command, uint8_t wait)
           }
           command++;
      }
-     PIDR_set_need_value(iPrinter->BedPID, tempBed);
-     while ((wait) && (iPrinter->tempBed < tempBed))
+     PIDR_set_need_value(&iPrinter.BedPID, tempBed);
+     while ((wait) && (iPrinter.tempBed < tempBed))
      {
           Await();
      }
@@ -785,8 +784,8 @@ inline void heat_nozzle_command(const char *command, uint16_t wait)
           }
           command++;
      }
-     PIDR_set_need_value(iPrinter->NozzlePID, NozzleTemp);
-     while (wait && iPrinter->tempNozzle < NozzleTemp)
+     PIDR_set_need_value(&iPrinter.NozzlePID, NozzleTemp);
+     while (wait && iPrinter.tempNozzle < NozzleTemp)
      {
           Await();
      }
@@ -794,33 +793,33 @@ inline void heat_nozzle_command(const char *command, uint16_t wait)
 
 void Await()
 {
-    if ((iPrinter->Flags & (1 << FlagUARTTimeOut)) != 0)
+    if ((iPrinter.Flags & (1 << FlagUARTTimeOut)) != 0)
      {
           send_cur_information();
-          iPrinter->Flags &= ~(1 << FlagUARTTimeOut);
+          iPrinter.Flags &= ~(1 << FlagUARTTimeOut);
           UATRTimeOut = 0;
      }
-     if((iPrinter->Flags & (1 <<FlagDebug)) != 0){
+     if((iPrinter.Flags & (1 <<FlagDebug)) != 0){
 
      }
 }
 
 void move_to(float X, float Y, float Z, float E, int speedMMS)
 {
-     float XVec = X - iPrinter->CurrentPosition.X;
-     float YVec = Y - iPrinter->CurrentPosition.Y;
-     float ZVec = Z - iPrinter->CurrentPosition.Z;
+     float XVec = X - iPrinter.CurrentPosition.X;
+     float YVec = Y - iPrinter.CurrentPosition.Y;
+     float ZVec = Z - iPrinter.CurrentPosition.Z;
      move(XVec, YVec, ZVec, E, speedMMS);
 }
 
 inline void set_temp_bed(uint8_t temp)
 {
-     iPrinter->BedPID->needValue = temp;
+     iPrinter.BedPID.needValue = temp;
 }
 
 inline void set_temp_nozzle(int temp)
 {
-     iPrinter->NozzlePID->needValue = temp;
+     iPrinter.NozzlePID.needValue = temp;
 }
 
 /////////////////////////////Gcode and commands --
