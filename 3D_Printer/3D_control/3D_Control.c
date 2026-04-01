@@ -30,8 +30,8 @@ void setup_printer()
      UART_init(BaudRate);
      UART_set_call_back_RX(add_in_buffer);
      // memset(iPrinter,0,sizeof(ThreeD_Printer));
-     iPrinter.NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
-     iPrinter.BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
+     // iPrinter.NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
+     // iPrinter.BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
      iPrinter.flowrate = 100;
      iPrinter.feedrate = 100;
 
