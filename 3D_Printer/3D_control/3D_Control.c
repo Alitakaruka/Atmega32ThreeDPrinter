@@ -100,7 +100,7 @@ void setup_printer()
      "Max command len:%d",
      Set.CustomName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
 
-     log_information("Free ram:%d",free_memory());
+     // log_information("Free ram:%d",free_memory());
 }
 
 void printer_serve()
