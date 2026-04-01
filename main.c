@@ -3,5 +3,6 @@
 void main(){
     setup_printer();
     // set_temp_bed(123);
+    log_error("AAAAAAAAAAAAAAA");
     printer_serve();
 }
