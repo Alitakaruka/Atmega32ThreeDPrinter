@@ -49,13 +49,13 @@ void setup_printer()
           iPrinter.settings.steps_to_mm_E = E_STEPS_MM;
      }
 
-     BaseSettings Set = {}; 
-     eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
-     if (Set.magic != SETTINGS_MAGIC) {
-          Set.magic = SETTINGS_MAGIC;
-          strcpy(Set.CustomName, PrinterName);
-          eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
-     }
+     // BaseSettings Set = {}; 
+     // eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+     // if (Set.magic != SETTINGS_MAGIC) {
+     //      Set.magic = SETTINGS_MAGIC;
+     //      strcpy(Set.CustomName, PrinterName);
+     //      eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
+     // }
 
      // Ports setup
      AXES_DDR = 255;
@@ -98,7 +98,7 @@ void setup_printer()
      "Length:%d\n"
      "Height:%d\n"
      "Max command len:%d",
-     Set.CustomName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
+     PrinterName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
 
      // log_information("Free ram:%d",free_memory());
 }
