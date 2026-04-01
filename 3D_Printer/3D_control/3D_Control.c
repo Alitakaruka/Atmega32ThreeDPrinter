@@ -91,16 +91,16 @@ void setup_printer()
      set_light(255, 255, 255);
      // UART_send_message("test");
      UART_send_message(EndOfData);
-     // log_success("The printer has loaded!\n"
-     // "Name:%s\n"
-     // "Chip:%s\n"
-     // "Width:%d\n"
-     // "Length:%d\n"
-     // "Height:%d\n"
-     // "Max command len:%d",
-     // Set.CustomName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
+     log_success("The printer has loaded!\n"
+     "Name:%s\n"
+     "Chip:%s\n"
+     "Width:%d\n"
+     "Length:%d\n"
+     "Height:%d\n"
+     "Max command len:%d",
+     Set.CustomName,ChipName,SIZE_X_MM,SIZE_Y_MM,SIZE_Z_MM,MaxCommandLen);
 
-     // log_information("Free ram:%d",free_memory());
+     log_information("Free ram:%d",free_memory());
 }
 
 void printer_serve()
