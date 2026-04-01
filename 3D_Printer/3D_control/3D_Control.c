@@ -50,7 +50,7 @@ void setup_printer()
      }
 
 
-     BaseSettings Set = {}; 
+     BaseSettings Set; 
 
      eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
      // if (Set.magic != SETTINGS_MAGIC) {
