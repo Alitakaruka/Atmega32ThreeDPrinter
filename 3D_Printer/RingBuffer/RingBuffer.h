@@ -2,6 +2,7 @@
 #define RINGBUFFER_H
 #include "Configuration.h"
 #include "string.h"
+#include <util/atomic.h>
 
 typedef struct RingBuffer
 {
@@ -23,15 +24,33 @@ void RingBuffer_add_element(volatile RingBuffer* buffer,const char* element);
 typedef struct 
 {
     unsigned char data[commandsBufferSize];
-    size_t  readPos;
-    size_t  writePos;    
+    uint16_t  readPos;
+    uint16_t  writePos;    
 }Buffio;
 
 
-    volatile static uint8_t Buffio_isEmpty(Buffio* buffio)  { return buffio->readPos == buffio->writePos; }
-    static uint8_t Buffio_isFull(Buffio* buffio)  { return ((buffio->writePos + 1) % commandsBufferSize) == buffio->readPos; }
+    volatile static uint8_t Buffio_isEmpty(Buffio* buffio)  { 
+            uint16_t r,w;
+         ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            r = buffio->readPos;
+            w = buffio->writePos;
+        }
+        return w == r; }
+    static uint8_t Buffio_isFull(Buffio* buffio)  { 
+        uint16_t r,w;
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE){
+            r = buffio->readPos;
+            w = buffio->writePos;
+        }
+        return ((w + 1) % commandsBufferSize) == r; }
 
     static size_t Buffio_available(Buffio* buffio)  {
+        uint16_t r,w;
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            r = buffio->readPos;
+            w = buffio->writePos;
+        }
+
         if(buffio->writePos >= buffio->readPos)
             return buffio->writePos - buffio->readPos;
         else

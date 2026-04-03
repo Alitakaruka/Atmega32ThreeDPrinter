@@ -36,7 +36,7 @@ void setup_printer()
      iPrinter.feedrate = 100;
 
 
-     eeprom_read_block(&iPrinter.settings,&settings_eeprom,sizeof(Settings));
+     // eeprom_read_block(&iPrinter.settings,&settings_eeprom,sizeof(Settings));
 
      //EEPROM
      if (iPrinter.settings.magic != SETTINGS_MAGIC){
@@ -48,14 +48,6 @@ void setup_printer()
 
 
      BaseSettings Set; 
-
-     // eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
-     // if (Set.magic != SETTINGS_MAGIC) {
-     //      Set.magic = SETTINGS_MAGIC;
-     //      strncpy(Set.CustomName, PrinterName,23);
-     //      Set.CustomName[24] = '\0';
-     //      eeprom_write_block(&Set, &BaseSettings_eeprom, sizeof(BaseSettings));
-     // }
 
      // Ports setup
      AXES_DDR = 255;
@@ -103,17 +95,17 @@ void setup_printer()
      log_information("Free ram:%d",free_memory());
 }
 
+
 void printer_serve()
 {
      while (1)
      {
           if (!Buffio_isEmpty(&(iPrinter.buffio))){
-               char CurrentCommand[MaxCommandLen] = {};
+               // log_information("Not is empty!");
+               // asm("nop");
+               static char CurrentCommand[MaxCommandLen] = {};
                if (Buffio_ReadLine(&(iPrinter.buffio), CurrentCommand,
-                    sizeof(CurrentCommand), EndOfData)== -1){ 
-                           if((iPrinter.Flags & (1 <<FlagDebug)) != 0){
-                              log_error("Max command len!");
-                }     
+                    sizeof(CurrentCommand), EndOfData)== -1){   
                     panic("Max command len error!");
                }
                execute_command(CurrentCommand);
@@ -125,6 +117,7 @@ void printer_serve()
           }
      }
 }
+
 
 void add_in_buffer(char byte)
 {
@@ -176,10 +169,10 @@ void execute_command(char* command)
           }
           else if (strcasestr(command, Identification))
           {
-               BaseSettings Set = {}; 
-               eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
+               // BaseSettings Set = {}; 
+               // eeprom_read_block(&Set,&BaseSettings_eeprom,sizeof(BaseSettings));
      
-               UART_send_command(EndOfData,M_Name,Set.CustomName);
+               UART_send_command(EndOfData,M_Name,PrinterName);
                UART_send_command(EndOfData,M_Type, PrinterType);
                UART_send_command(EndOfData,DEVICE_CHIP_NAME,ChipName);
                // XYZ
@@ -187,7 +180,7 @@ void execute_command(char* command)
                UART_send_command(EndOfData, M_Length, SIZE_Y_MM);
                UART_send_command(EndOfData, M_Height, SIZE_Z_MM);
 
-               UART_send_command(EndOfData,MyKey,iPrinter.settings.UniqueKey);
+               // UART_send_command(EndOfData,MyKey,iPrinter.settings.UniqueKey);
           }else if(strcasestr(command,"DebugMode")){
                int mode;
                if(sscanf(command,DebugMode,&mode) == 1){
@@ -197,13 +190,15 @@ void execute_command(char* command)
                     iPrinter.Flags &= ~(1 << FlagDebug);
                    }
                }
-          }else if(strstr(command,SetKey)){
-               char buf[9] ={};
-               if(sscanf(command,SetKey,buf) != 0){
-                    strcpy(iPrinter.settings.UniqueKey,buf);
-                    save_setting();
-               }
-          }else{
+          }
+          // else if(strstr(command,SetKey)){
+          //      char buf[9] ={};
+          //      if(sscanf(command,SetKey,buf) != 0){
+          //           strcpy(iPrinter.settings.UniqueKey,buf);
+          //           save_setting();
+          //      }
+          // }
+          else{
                log_warning("command not defined:%s",command);
           }
           break;
@@ -522,6 +517,7 @@ void move(float X, float Y, float Z, float E, float speedMMS)
      bring_steps_to_format();
      // The resulting vector is calculated using the Pythagorean theorem from the previous vectors.
      float resVecXYZE = sqrtf(((sque(X) + sque(Y)) + sque(Z)) + sque(E));
+     // log_information("resVecXYZE:%f",resVecXYZE);
      if (resVecXYZE < 0.0001f)
      {
           log_warning("Null steps value!");
@@ -536,6 +532,12 @@ void move(float X, float Y, float Z, float E, float speedMMS)
      Z_Timer_Register = get_delay_timer((Z * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtZ);
      E_Timer_Register = get_delay_timer((E * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtE);
     
+
+     // log_information("Y_Timer_Register:%d",Y_Timer_Register);
+     // log_information("X_Timer_Register:%d",X_Timer_Register);
+     // log_information("Z_Timer_Register:%d",Z_Timer_Register);
+     // log_information("E_Timer_Register:%d",E_Timer_Register);
+     // log_information("iPrinter.Steps.speedAtZ:%d",iPrinter.Steps.speedAtZ);
      if (stepTimersNull())
      {
           log_warning("Null steps value!");

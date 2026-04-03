@@ -19,7 +19,7 @@ typedef struct Position
 
 typedef struct Settings{
     uint16_t magic;
-    char UniqueKey[9];
+    // char UniqueKey[9];
     int steps_to_mm_X;
     int steps_to_mm_Y;
     int steps_to_mm_Z;
@@ -61,7 +61,7 @@ typedef struct Steps
 
 typedef struct
 {
-    volatile Buffio buffio;
+    Buffio buffio;
 
     Settings settings;
 

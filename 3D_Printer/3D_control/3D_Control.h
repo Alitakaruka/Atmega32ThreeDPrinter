@@ -17,7 +17,7 @@
 
 
 #define AXES_TIMER_PRESCALER 256
-#define STEP_TIMER_UNIT 2
+#define STEP_TIMER_UNIT 10
 
 #define X_Timer_Register OCR1AA_X
 #define Y_Timer_Register OCR1AB_Y
@@ -177,6 +177,7 @@ static inline void command_G1 (const char* command){
           else if (*command == 'F' || *command == 'f'){
               command++;
                 F = strtof(++command,&end);
+                F = F/60;
                // F = parse_GCode_from_string(command + 1) / 60;
                // UART_println("F parce: %f",parse_GCode_from_string(command + 1) / 60);
           }else if(*command == 'E' || *command == 'e'){
@@ -200,8 +201,8 @@ static inline void command_G1 (const char* command){
     log_information("iPrinter.speed:%f",iPrinter.speed);
     log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
 
-   F = F * ((float)(iPrinter.feedrate) / 100.0f);
-    log_information("F:%d",F);
+     F = F * (((float)iPrinter.feedrate) / 100.0f);
+    log_information("F:%f",F);
     log_information("iPrinter.speed:%f",iPrinter.speed);
     log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
 
@@ -221,6 +222,9 @@ static inline void command_G1 (const char* command){
           E = (isnan(E) ? 0: E);
     }
     E = E* ((float)(iPrinter.flowrate)/ 100.0f);
+
+    log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f",X,Y,Z,E,F);
+
     move(X, Y, Z, E, F);
 }
 
