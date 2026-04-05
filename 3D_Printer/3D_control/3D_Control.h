@@ -1,23 +1,21 @@
 #ifndef ThreeD_Control_H
 #define ThreeD_Control_H
-#include "Configuration.h"
 #include "Ali_Pri/command.h"
+#include "Configuration.h"
+#include "Light_WS2812/light_ws2812.h"
+#include "PIDR/PIDR.h"
 #include "Printer/Printer.h"
 #include "Serial/UART.h"
 #include "Service/Service.h"
 #include "Termistor/Termistor.h"
-#include "PIDR/PIDR.h"
 #include <avr/interrupt.h>
-#include <util/delay.h>
-#include <stdlib.h>
-#include "Light_WS2812/light_ws2812.h"
 #include <math.h>
 #include <stdarg.h>
-
-
+#include <stdlib.h>
+#include <util/delay.h>
 
 #define AXES_TIMER_PRESCALER 256
-#define STEP_TIMER_UNIT 10
+#define STEP_TIMER_UNIT 2
 
 #define X_Timer_Register OCR1AA_X
 #define Y_Timer_Register OCR1AB_Y
@@ -28,62 +26,58 @@ extern volatile uint16_t StepsSleepTimeout;
 extern volatile uint16_t PID_CALIB_TIME;
 
 // static char RX_Buffer[RX_Buffer_SIZE];
-extern volatile ThreeD_Printer iPrinter; 
+extern volatile ThreeD_Printer iPrinter;
 
 void setup_printer();
 void printer_serve();
 
-//timers 
+// timers
 void start_axes_timer();
 void stop_axes_timer();
 
-static inline void PWM_timer_init()
-{
-     // Настройка Fast PWM 10-bit, неинвертирующий режим, делитель 64
-     // Настройка режима: Fast PWM, 10-bit (WGM13:0 = 0b0011)
-     // TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11) | (1 << WGM10);
-     TCCR1A = (1 << COM1A1) | (1 << COM1B1)  | (1 << WGM10);
-     TCCR1B = (1 << WGM12) | (1 << CS11); // Предделитель 64 (CS11 и CS10)
+static inline void PWM_timer_init() {
+    // Настройка Fast PWM 10-bit, неинвертирующий режим, делитель 64
+    // Настройка режима: Fast PWM, 10-bit (WGM13:0 = 0b0011)
+    // TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM11) | (1 << WGM10);
+    TCCR1A = (1 << COM1A1) | (1 << COM1B1) | (1 << WGM10);
+    TCCR1B = (1 << WGM12) | (1 << CS11); // Предделитель 64 (CS11 и CS10)
 
-     OCR1A = 0;
-     OCR1B = 0;
+    OCR1A = 0;
+    OCR1B = 0;
 } // Timer0
-static inline void init_watch_dog_printer_timer(){
-     TCCR0  |= (1 << WGM01) | (1 << CS02) | (1 << CS00); //10254
-     OCR0 = 255;
-     TIMSK |= (1 << OCIE0);
-}//Timer2
+static inline void init_watch_dog_printer_timer() {
+    TCCR0 |= (1 << WGM01) | (1 << CS02) | (1 << CS00); // 10254
+    OCR0 = 255;
+    TIMSK |= (1 << OCIE0);
+} // Timer2
 
-static inline void init_axes_timer(){
-     TCCR2  |= (1 << WGM21) |(1 << CS22) | (1 << CS21); //CTC 256
-     OCR2  = STEP_TIMER_UNIT;
-     TIMSK |= (1 << OCIE2);
+static inline void init_axes_timer() {
+    TCCR2 |= (1 << WGM21) | (1 << CS22) | (1 << CS21); // CTC 256
+    OCR2 = STEP_TIMER_UNIT;
+    TIMSK |= (1 << OCIE2);
 }
 
-unsigned int get_delay_timer(float speed, int  speedAt);
+unsigned int get_delay_timer(float speed, int speedAt);
 uint8_t stepTimersNull();
-//Move
-static inline int float_to_step(float distance_MM, int stepByMM){
+// Move
+static inline int float_to_step(float distance_MM, int stepByMM) {
     return round(distance_MM * stepByMM);
 }
-void move_to(float X,float Y, float Z, float E,int speedMMS);
+void move_to(float X, float Y, float Z, float E, int speedMMS);
 void move(float X, float Y, float Z, float E, float speedMMS);
 
 void Await();
-inline int convert_ADC_to_temp(int ADCValue){
-
-}
-//Buffer and commands
-void execute_command(char* command);
+inline int convert_ADC_to_temp(int ADCValue) {}
+// Buffer and commands
+void execute_command(char *command);
 void add_in_buffer(char byte);
 
-
-//EEPROM
-static inline void save_setting(){
-     eeprom_write_block(&iPrinter.settings,&settings_eeprom,sizeof(Settings));
+// EEPROM
+static inline void save_setting() {
+    eeprom_write_block(&iPrinter.settings, &settings_eeprom, sizeof(Settings));
 }
 
-//temp
+// temp
 extern inline void set_temp_bed(uint8_t temp);
 extern inline void set_temp_nozzle(int temp);
 uint16_t read_adc(uint8_t channel);
@@ -95,26 +89,24 @@ void handle_Z();
 
 // extern inline void clear_RX();
 
-void panic(char* errorMsg);
-void log_error(const char* errorMsg,...);
-void log_information(const char *Msg,...);
-void log_success(const char *Msg,...);
-void log_warning(const char *Msg,...);
+void panic(char *errorMsg);
+void log_error(const char *errorMsg, ...);
+void log_information(const char *Msg, ...);
+void log_success(const char *Msg, ...);
+void log_warning(const char *Msg, ...);
 
-#define Write_Crash_log(msg) \
+#define Write_Crash_log(msg)                                                   \
     UART_printf("[%s:%d] %s\n", __FILE__, __LINE__, msg)
 
 void stop_print();
 void panic();
 
-void out_of_range(float X,float Y, float Z,float E);
+void out_of_range(float X, float Y, float Z, float E);
 float get_extruder_move(float nowMove);
 
-inline float sque(float value){
-     return value * value;
-}
-//GCode++
-#define command_G0(command)  command_G1(command)
+inline float sque(float value) { return value * value; }
+// GCode++
+#define command_G0(command) command_G1(command)
 
 // static inline void command_G0(const char *command)
 // {
@@ -153,84 +145,77 @@ inline float sque(float value){
 //           Y = X-iPrinter.CurrentPosition.Y;
 //           Z = X-iPrinter.CurrentPosition.Z;
 //     }
-   
+
 //     move(X, Y, Z, 0, F);
 // }
-static inline void command_G1 (const char* command){
-     float X = NAN, Y = NAN, Z = NAN, E = NAN, F = NAN;
+static inline void command_G1(const char *command) {
+    float X = NAN, Y = NAN, Z = NAN, E = NAN, F = NAN;
 
-   while (*command != '\0')
-     {
-          char* end = NULL;
-          if (*command == 'X' || *command == 'x'){
-               X = strtof(++command,&end);
-               // X = parse_GCode_from_string(command + 1);
-          }
-          else if (*command == 'Y' || *command == 'y'){
-                Y = strtof(++command,&end);
-               // Y = parse_GCode_from_string(command + 1);
-          }
-          else if (*command == 'Z' || *command == 'z'){
-                Z = strtof(++command,&end);
-               // Z = parse_GCode_from_string(command + 1);
-          }
-          else if (*command == 'F' || *command == 'f'){
-              command++;
-                F = strtof(++command,&end);
-                F = F/60;
-               // F = parse_GCode_from_string(command + 1) / 60;
-               // UART_println("F parce: %f",parse_GCode_from_string(command + 1) / 60);
-          }else if(*command == 'E' || *command == 'e'){
-              command++;
-                E = strtof(++command,&end);
-               // E = get_extruder_move(parse_GCode_from_string(command+1));
-          }
-          if (end == NULL){
-          command++;
-          }else{
-              command = end;
-          }
+    while (*command != '\0') {
+        char *end = NULL;
+
+        if (*command == 'X' || *command == 'x') {
+            X = strtof(command + 1, &end);
+        } else if (*command == 'Y' || *command == 'y') {
+            Y = strtof(command + 1, &end);
+        } else if (*command == 'Z' || *command == 'z') {
+            Z = strtof(command + 1, &end);
+        } else if (*command == 'F' || *command == 'f') {
+            F = strtof(command + 1, &end) / 60.0f;
+        } else if (*command == 'E' || *command == 'e') {
+            E = strtof(command + 1, &end);
+        }
+
+        if (end == command + 1) {
+            command++;
+        } else if (end != NULL) {
+            command = end;
+        } else {
+            command++;
+        }
     }
-    
-    if (isnan(F)){
-          F = iPrinter.speed;
-    }else{
-          iPrinter.speed = F;
+
+    if (isnan(F)) {
+        F = iPrinter.speed;
+    } else {
+        iPrinter.speed = F;
     }
-    log_information("F:%f",F);
-    log_information("iPrinter.speed:%f",iPrinter.speed);
-    log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
+    //     log_information("F:%f",F);
+    //     log_information("iPrinter.speed:%f",iPrinter.speed);
+    //     log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
 
-     F = F * (((float)iPrinter.feedrate) / 100.0f);
-    log_information("F:%f",F);
-    log_information("iPrinter.speed:%f",iPrinter.speed);
-    log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
+    // F = F * (((float)iPrinter.feedrate) / 100.0f);
+    //     log_information("F:%f",F);
+    //     log_information("iPrinter.speed:%f",iPrinter.speed);
+    //     log_information("iPrinter.feedrate:%d",iPrinter.feedrate);
 
-
-   if(iPrinter.Flags & (1 << FlagIsAbsalute)){
-          X =  (!isnan(X) ? X-iPrinter.CurrentPosition.X: 0);
-          Y =  (!isnan(Y)  ?  Y-iPrinter.CurrentPosition.Y: 0);
-          Z =  (!isnan(Z) ? Z-iPrinter.CurrentPosition.Z: 0);
-   }else{
-     X = (isnan(X) ? 0 : X);
-     Y = (isnan(Y) ? 0 : Y);
-     Z = (isnan(Z) ? 0 : Z);
-   }
-    if (iPrinter.Flags &(1 << FlagExtruderIsAbsalute)){
-          E = (!isnan(E) ? E-iPrinter.CurrentPosition.E: 0);
-    }else{
-          E = (isnan(E) ? 0: E);
+    if (iPrinter.Flags & (1 << FlagIsAbsalute)) {
+        X = (!isnan(X) ? X - iPrinter.CurrentPosition.X : 0);
+        Y = (!isnan(Y) ? Y - iPrinter.CurrentPosition.Y : 0);
+        Z = (!isnan(Z) ? Z - iPrinter.CurrentPosition.Z : 0);
+    } else {
+        X = (isnan(X) ? 0 : X);
+        Y = (isnan(Y) ? 0 : Y);
+        Z = (isnan(Z) ? 0 : Z);
     }
-    E = E* ((float)(iPrinter.flowrate)/ 100.0f);
 
-    log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f",X,Y,Z,E,F);
+    if (iPrinter.Flags & (1 << FlagExtruderIsAbsalute)) {
+        E = (!isnan(E) ? E - iPrinter.CurrentPosition.E : 0);
+    } else {
+        E = (isnan(E) ? 0 : E);
+    }
+    //     E = E* ((float)(iPrinter.flowrate)/ 100.0f);
 
-    move(X, Y, Z, E, F);
+    //     log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f",X,Y,Z,E,F);
+
+    if (X > 0 || Y > 0 || Z > 0 || E > 0) {
+        move(X, Y, Z, E, F);
+    }
 }
 
-static inline void command_G4(const char* command){
+static inline void command_G4(const char *command) {
     // char** split = strSplit(command,' ');
-     
+
     // for(int i = 0; split[i]!= NULL; i++){
     //      if(strcasestr(split[i],"F")){
     //          int delay = atoi(split[i]+1);
@@ -266,18 +251,24 @@ static inline void command_G4(const char* command){
 //                while(!((iPrinter.Flags) & (1 << FlagColibrationPID))){
 //                     CounterN++;
 //                     CounterB++;
-//                     if(iPrinter.NozzlePID->needValue - iPrinter.tempNozzle < maxN){
-//                          maxN = (iPrinter.NozzlePID->needValue - iPrinter.tempNozzle < 0) ? 
-//                          iPrinter.NozzlePID->needValue - iPrinter.tempNozzle : 
-//                          iPrinter.NozzlePID->needValue - iPrinter.tempNozzle *-1;
-//                     }    
-//                     midleN = (uint32_t)midleN *((float)iPrinter.tempNozzle/(float)CounterN) ;
-//                     MidleB = (uint32_t)MidleB *((float)iPrinter.tempBed/(float)CounterB) ;
+//                     if(iPrinter.NozzlePID->needValue - iPrinter.tempNozzle <
+//                     maxN){
+//                          maxN = (iPrinter.NozzlePID->needValue -
+//                          iPrinter.tempNozzle < 0) ?
+//                          iPrinter.NozzlePID->needValue - iPrinter.tempNozzle
+//                          : iPrinter.NozzlePID->needValue -
+//                          iPrinter.tempNozzle *-1;
+//                     }
+//                     midleN = (uint32_t)midleN
+//                     *((float)iPrinter.tempNozzle/(float)CounterN) ; MidleB =
+//                     (uint32_t)MidleB
+//                     *((float)iPrinter.tempBed/(float)CounterB) ;
 //                     if(iPrinter.BedPID->needValue - iPrinter.tempBed < maxN){
-//                          maxN = (iPrinter.BedPID->needValue - iPrinter.tempBed < 0) ? 
-//                          iPrinter.BedPID->needValue - iPrinter.tempBed : 
-//                          iPrinter.BedPID->needValue - iPrinter.tempBed *-1;
-//                     }    
+//                          maxN = (iPrinter.BedPID->needValue -
+//                          iPrinter.tempBed < 0) ? iPrinter.BedPID->needValue -
+//                          iPrinter.tempBed : iPrinter.BedPID->needValue -
+//                          iPrinter.tempBed *-1;
+//                     }
 //                     Await();
 //                }
 //                PID_CALIB_TIME =0;
@@ -290,147 +281,146 @@ static inline void command_G4(const char* command){
 
 //                  iPrinter.Flags &= ~(1 << FlagColibrationPID);
 //                  while(!(iPrinter.Flags) & (1 << FlagColibrationPID)){
-                    
+
 //                  }
 //              }
 //          }
 //      }
 //  }
- 
-static inline void Command_G10(char* command){
-     float E,F = NAN;
-     while(*command != '\0'){
-          char* end = NULL;
-          if(*command == 'E'){
-               E = strtof(++command,&end);
-               // E = parse_GCode_from_string(command + 1);
-          }else if(*command == 'F'){
-               F = strtof(++command,&end);
-               // F = parse_GCode_from_string(command +1);
-          }
-          command++;
-     }
-     if(isnan(E)){return;}
 
-     if(isnan(F)){
-          F = iPrinter.speed;
-     }
-     move(0,0,0,E,F);
-} //retract
-static inline void Command_G11 (char* command){
-     float E,F = NAN;
+static inline void Command_G10(char *command) {
+    float E, F = NAN;
+    while (*command != '\0') {
+        char *end = NULL;
+        if (*command == 'E') {
+            E = strtof(++command, &end);
+            // E = parse_GCode_from_string(command + 1);
+        } else if (*command == 'F') {
+            F = strtof(++command, &end);
+            // F = parse_GCode_from_string(command +1);
+        }
+        command++;
+    }
+    if (isnan(E)) {
+        return;
+    }
 
-     while(*command != '\0'){
-          char* end = NULL;
-          if(*command == 'E'){
-               E = strtof(++command,&end);
-               // E = parse_GCode_from_string(command + 1);
-          }else if(*command == 'F'){
-               F = strtof(++command,&end);
-               // F = parse_GCode_from_string(command +1);
-          }
-          command++;
-     }
-     if(isnan(E)){return;}
+    if (isnan(F)) {
+        F = iPrinter.speed;
+    }
+    move(0, 0, 0, E, F);
+} // retract
+static inline void Command_G11(char *command) {
+    float E, F = NAN;
 
-     if(isnan(F)){
-          F = iPrinter.speed;
-     }
-     move(0,0,0,-E,F);
+    while (*command != '\0') {
+        char *end = NULL;
+        if (*command == 'E') {
+            E = strtof(++command, &end);
+            // E = parse_GCode_from_string(command + 1);
+        } else if (*command == 'F') {
+            F = strtof(++command, &end);
+            // F = parse_GCode_from_string(command +1);
+        }
+        command++;
+    }
+    if (isnan(E)) {
+        return;
+    }
+
+    if (isnan(F)) {
+        F = iPrinter.speed;
+    }
+    move(0, 0, 0, -E, F);
 }
-void home_position(); //G28
+void home_position(); // G28
 
-static inline void Command_G90 (){
-     iPrinter.Flags |= (1 << FlagIsAbsalute);
-}//set absolute coord
-static inline void Command_G91 (){
-     iPrinter.Flags &= ~(1 << FlagIsAbsalute);
+static inline void Command_G90() {
+    iPrinter.Flags |= (1 << FlagIsAbsalute);
+} // set absolute coord
+static inline void Command_G91() { iPrinter.Flags &= ~(1 << FlagIsAbsalute); }
+static inline void Command_G92(char *command) {
+    float X = -1, Y = -1, Z = -1, E = -1;
+    while (*command != '\0') {
+        if (*command == 'X' || *command == 'x') {
+            X = parse_GCode_from_string(command + 1);
+        } else if (*command == 'Y' || *command == 'y') {
+            Y = parse_GCode_from_string(command + 1);
+        } else if (*command == 'Z' || *command == 'z') {
+            Z = parse_GCode_from_string(command + 1);
+        } else if (*command == 'E' || *command == 'e') {
+            E = get_extruder_move(parse_GCode_from_string(command + 1));
+        }
+        command++;
+    }
+    iPrinter.CurrentPosition.X = (X == -1) ? iPrinter.CurrentPosition.X : X;
+    iPrinter.CurrentPosition.Y = (Y == -1) ? iPrinter.CurrentPosition.Y : Y;
+    iPrinter.CurrentPosition.Z = (Z == -1) ? iPrinter.CurrentPosition.Z : Z;
+    iPrinter.CurrentPosition.E = (E == -1) ? iPrinter.CurrentPosition.E : E;
 }
-static inline void Command_G92(char *command)
-{
-     float X = -1, Y = -1, Z = -1, E = -1;
-     while (*command != '\0')
-     {
-          if (*command == 'X' || *command == 'x')   {
-               X = parse_GCode_from_string(command + 1);
-          }
-          else if (*command == 'Y' || *command == 'y') {
-               Y = parse_GCode_from_string(command + 1);
-          }
-          else if (*command == 'Z' || *command == 'z') {
-               Z = parse_GCode_from_string(command + 1);
-          }
-          else if (*command == 'E' || *command == 'e') {
-               E = get_extruder_move(parse_GCode_from_string(command + 1));
-          }
-          command++;
-     }
-     iPrinter.CurrentPosition.X = (X == -1) ? iPrinter.CurrentPosition.X : X;
-     iPrinter.CurrentPosition.Y = (Y == -1) ? iPrinter.CurrentPosition.Y : Y;
-     iPrinter.CurrentPosition.Z = (Z == -1) ? iPrinter.CurrentPosition.Z : Z;
-     iPrinter.CurrentPosition.E = (E == -1) ? iPrinter.CurrentPosition.E : E;
-}
-//Gcode--
+// Gcode--
 
-//MCode++
-static inline void heat_bed_command(const char* command,uint8_t wait); //M140 | M190
-static inline void heat_nozzle_command(const char* command,uint16_t wait);//M104 | M109
-static inline void Command_M82(){ //set absolute extruder mode
+// MCode++
+static inline void heat_bed_command(const char *command,
+                                    uint8_t wait); // M140 | M190
+static inline void heat_nozzle_command(const char *command,
+                                       uint16_t wait); // M104 | M109
+static inline void Command_M82() { // set absolute extruder mode
     iPrinter.Flags |= (1 << FlagExtruderIsAbsalute);
 }
 extern void send_all_information();
 extern void send_base_inforamtion();
-extern void execute_MCode(const char* command);
-extern void execute_GCode( const char* command);
-extern void set_light(uint8_t R,uint8_t G,uint8_t B);
-extern void blickLight(uint8_t R,uint8_t G,uint8_t B);
+extern void execute_MCode(const char *command);
+extern void execute_GCode(const char *command);
+extern void set_light(uint8_t R, uint8_t G, uint8_t B);
+extern void blickLight(uint8_t R, uint8_t G, uint8_t B);
 
-static inline void Command_M83(){
+static inline void Command_M83() {
     iPrinter.Flags &= ~(1 << FlagExtruderIsAbsalute);
 }
-static inline void enable_steps(){ //M17
-     EndStopsAndAnableStepsPORT &= ~(1 << StepStatePin);
-     StepsSleepTimeout = 0;
+static inline void enable_steps() { // M17
+    EndStopsAndAnableStepsPORT &= ~(1 << StepStatePin);
+    StepsSleepTimeout = 0;
 }
-static inline void disable_steps(){ //M18
-     EndStopsAndAnableStepsPORT |= (1 << StepStatePin);
-}
-
-static inline void set_fan_value(const char* command){
-     uint8_t NumberFan = 1;
-     uint8_t value = 0;
-     while (*command != '\0'){
-          if(*command == 'P' || *command == 'p'){
-               NumberFan =  (int)parse_GCode_from_string(command + 1);
-          }
-          if(*command == 'S' || *command == 's'){
-               value = (int)parse_GCode_from_string(command + 1);
-          }
-          command++;
-     }
-     UART_printf("Fan value:%d",value);
-     if(NumberFan == 1){
-          iPrinter.fan1 = value;
-     }else if(NumberFan = 2){
-          iPrinter.fan2 = value;
-     }
+static inline void disable_steps() { // M18
+    EndStopsAndAnableStepsPORT |= (1 << StepStatePin);
 }
 
-static inline void diasble_fan(const char* command){
-     uint8_t NumberFan = 1;
-     uint8_t value = 0;
-     while (*command != '\0'){
-          if(*command == 'P' || *command == 'p'){
-               NumberFan =  (int)parse_GCode_from_string(command + 1);
-          }
-          command++;
-     }
-     if(NumberFan == 1){
-          iPrinter.fan1 = 0;
-     }else if(NumberFan = 2){
-          iPrinter.fan2 = 0;
-     }
+static inline void set_fan_value(const char *command) {
+    uint8_t NumberFan = 1;
+    uint8_t value = 0;
+    while (*command != '\0') {
+        if (*command == 'P' || *command == 'p') {
+            NumberFan = (int)parse_GCode_from_string(command + 1);
+        }
+        if (*command == 'S' || *command == 's') {
+            value = (int)parse_GCode_from_string(command + 1);
+        }
+        command++;
+    }
+    UART_printf("Fan value:%d", value);
+    if (NumberFan == 1) {
+        iPrinter.fan1 = value;
+    } else if (NumberFan = 2) {
+        iPrinter.fan2 = value;
+    }
 }
-//MCode--
+
+static inline void diasble_fan(const char *command) {
+    uint8_t NumberFan = 1;
+    uint8_t value = 0;
+    while (*command != '\0') {
+        if (*command == 'P' || *command == 'p') {
+            NumberFan = (int)parse_GCode_from_string(command + 1);
+        }
+        command++;
+    }
+    if (NumberFan == 1) {
+        iPrinter.fan1 = 0;
+    } else if (NumberFan = 2) {
+        iPrinter.fan2 = 0;
+    }
+}
+// MCode--
 
 #endif

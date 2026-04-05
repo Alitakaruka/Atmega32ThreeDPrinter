@@ -14,6 +14,12 @@
 // #define EndcommandByte        ';'
 // #define UnknownValue         "__"
 
+
+#define MM_X (1.0/X_STEPS_MM)
+#define MM_Y (1.0/Y_STEPS_MM)
+#define MM_Z (1.0/Z_STEPS_MM)
+#define MM_E (1.0/E_STEPS_MM)
+
 //////////////////////////////////////////////////To the printer
 #define Identification "Identification"
 #define SetKey "SetKey:%s"
