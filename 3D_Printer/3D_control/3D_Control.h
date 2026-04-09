@@ -23,7 +23,7 @@
 #define Z_Timer_Register OCR1AC_Z
 
 extern volatile uint16_t StepsSleepTimeout;
-extern volatile uint16_t PID_CALIB_TIME;
+// extern volatile uint16_t PID_CALIB_TIME;
 
 // static char RX_Buffer[RX_Buffer_SIZE];
 extern volatile ThreeD_Printer iPrinter;
@@ -101,7 +101,7 @@ void log_warning(const char *Msg, ...);
 void stop_print();
 void panic();
 
-void out_of_range(float X, float Y, float Z, float E);
+void out_of_range(float X, float Y, float Z);
 float get_extruder_move(float nowMove);
 
 inline float sque(float value) { return value * value; }
@@ -148,12 +148,12 @@ inline float sque(float value) { return value * value; }
 
 //     move(X, Y, Z, 0, F);
 // }
+
 static inline void command_G1(const char *command) {
     float X = NAN, Y = NAN, Z = NAN, E = NAN, F = NAN;
 
     while (*command != '\0') {
         char *end = NULL;
-
         if (*command == 'X' || *command == 'x') {
             X = strtof(command + 1, &end);
         } else if (*command == 'Y' || *command == 'y') {
@@ -166,7 +166,7 @@ static inline void command_G1(const char *command) {
             E = strtof(command + 1, &end);
         }
 
-        if (end == command + 1) {
+        if (end == command + 1 || end == command) {
             command++;
         } else if (end != NULL) {
             command = end;
@@ -206,11 +206,14 @@ static inline void command_G1(const char *command) {
     }
     //     E = E* ((float)(iPrinter.flowrate)/ 100.0f);
 
-    //     log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f",X,Y,Z,E,F);
+    //     log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f", X, Y, Z, E, F);
 
-    if (X > 0 || Y > 0 || Z > 0 || E > 0) {
+    if (X != 0 || Y != 0 || Z != 0 || E != 0) {
         move(X, Y, Z, E, F);
     }
+    //     else {
+    //         log_error("All steps is null!");
+    //     }
 }
 
 static inline void command_G4(const char *command) {
@@ -340,23 +343,31 @@ static inline void Command_G90() {
 } // set absolute coord
 static inline void Command_G91() { iPrinter.Flags &= ~(1 << FlagIsAbsalute); }
 static inline void Command_G92(char *command) {
-    float X = -1, Y = -1, Z = -1, E = -1;
+    float X = NAN, Y = NAN, Z = NAN, E = NAN;
     while (*command != '\0') {
+        char *end = NULL;
         if (*command == 'X' || *command == 'x') {
-            X = parse_GCode_from_string(command + 1);
+            X = strtof(command + 1, &end);
         } else if (*command == 'Y' || *command == 'y') {
-            Y = parse_GCode_from_string(command + 1);
+            Y = strtof(command + 1, &end);
         } else if (*command == 'Z' || *command == 'z') {
-            Z = parse_GCode_from_string(command + 1);
+            Z = strtof(command + 1, &end);
         } else if (*command == 'E' || *command == 'e') {
-            E = get_extruder_move(parse_GCode_from_string(command + 1));
+            E = strtof(command + 1, &end);
         }
-        command++;
+
+        if (end == command + 1 || end == command) {
+            command++;
+        } else if (end != NULL) {
+            command = end;
+        } else {
+            command++;
+        }
     }
-    iPrinter.CurrentPosition.X = (X == -1) ? iPrinter.CurrentPosition.X : X;
-    iPrinter.CurrentPosition.Y = (Y == -1) ? iPrinter.CurrentPosition.Y : Y;
-    iPrinter.CurrentPosition.Z = (Z == -1) ? iPrinter.CurrentPosition.Z : Z;
-    iPrinter.CurrentPosition.E = (E == -1) ? iPrinter.CurrentPosition.E : E;
+    iPrinter.CurrentPosition.X = (isnan(X)) ? iPrinter.CurrentPosition.X : X;
+    iPrinter.CurrentPosition.Y = (isnan(Y)) ? iPrinter.CurrentPosition.Y : Y;
+    iPrinter.CurrentPosition.Z = (isnan(Z)) ? iPrinter.CurrentPosition.Z : Z;
+    iPrinter.CurrentPosition.E = (isnan(E)) ? iPrinter.CurrentPosition.E : E;
 }
 // Gcode--
 

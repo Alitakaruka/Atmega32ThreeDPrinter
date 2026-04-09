@@ -2,22 +2,18 @@
 #define PRINTER_H
 #define SETTINGS_MAGIC 0xBEEA
 
-
-#include <RingBuffer/RingBuffer.h>
 #include <3D_control/PIDR/PIDR.h>
+#include <RingBuffer/RingBuffer.h>
 #include <avr/eeprom.h>
 
-
-typedef struct Position
-{
+typedef struct Position {
     float X;
     float Y;
-    float Z; 
+    float Z;
     float E;
 } Position;
 
-
-typedef struct Settings{
+typedef struct Settings {
     uint16_t magic;
     // char UniqueKey[9];
     int steps_to_mm_X;
@@ -25,20 +21,17 @@ typedef struct Settings{
     int steps_to_mm_Z;
     int steps_to_mm_E;
     float z_offset;
-}Settings;
+} Settings;
 
-typedef struct
-{
+typedef struct {
     uint32_t magic;
     char CustomName[25];
-}BaseSettings;
-
+} BaseSettings;
 
 static Settings EEMEM settings_eeprom;
 static BaseSettings EEMEM BaseSettings_eeprom;
 
-typedef struct Steps
-{
+typedef struct Steps {
     volatile int nowXsteps;
     volatile int nowYsteps;
     volatile int nowZsteps;
@@ -47,8 +40,8 @@ typedef struct Steps
     int speedAtX;
     int speedAtY;
     int speedAtZ;
-    int speedAtE; 
-}Steps;
+    int speedAtE;
+} Steps;
 
 #define FlagUARTTimeOut 0
 #define FlagIsAbsalute 1
@@ -59,12 +52,14 @@ typedef struct Steps
 #define FlagDebug 6
 #define FlagEstep 7
 
-typedef struct
-{
+typedef struct {
     Buffio buffio;
 
     Settings settings;
 
+    struct Speed {
+        float X;
+    };
     volatile uint8_t Flags;
     PIDR NozzlePID;
     PIDR BedPID;
@@ -77,7 +72,7 @@ typedef struct
 
     uint8_t fan1;
     uint8_t fan2;
-    
+
     volatile Position CurrentPosition;
     volatile Steps Steps;
 } ThreeD_Printer;

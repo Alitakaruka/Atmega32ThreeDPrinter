@@ -3,7 +3,7 @@
 
 #include <avr/io.h>
 
-//do not tuch
+// do not tuch
 #define CastomTermistor 0
 #define TERMISTER_NTC100k 1
 //
@@ -11,22 +11,22 @@
 #define HAS_LIGHT 0
 #define RGB_LIGHT 0
 
-//Base
+// Base
 #define PrinterName "Dolboebik"
 #define ChipName "ATM_32"
-#define PrinterType 1 //FDM printer
-//UART
+#define PrinterType 1 // FDM printer
+// UART
 #define BaudRate 9600
-#define commandsBufferSize 1024
+#define commandsBufferSize 512
 #define MaxCommandLen 128
 #define UART_Timeout_MS 300
 
-//CastomTermistor,TERMISTER_NTC100k... todo
+// CastomTermistor,TERMISTER_NTC100k... todo
 #define NozzleThetmistor TERMISTER_NTC100k
 #define BedThermistor TERMISTER_NTC100k
 
-//STEPS TO MM
-#define X_STEPS_MM 160 //old is 160
+// STEPS TO MM
+#define X_STEPS_MM 160 // old is 160
 #define Y_STEPS_MM 160 // old is 160
 #define Z_STEPS_MM 400
 #define E_STEPS_MM 500
@@ -35,12 +35,12 @@
 //
 #define MaxSpeedMMS 200
 #define StandartSpeed 50.0
-//heat
+// heat
 #define PWM_DDR DDRD
-#define PWM_PORT PORTD 
-//PB0  PB1 - UART RX & TX
-#define NOZZLE_HEAT_PIN PD4 //Timer 1 (OC1B)
-#define BED_HEAT_PIN PD5 //Timer1 (OC1A)
+#define PWM_PORT PORTD
+// PB0  PB1 - UART RX & TX
+#define NOZZLE_HEAT_PIN PD4 // Timer 1 (OC1B)
+#define BED_HEAT_PIN PD5    // Timer1 (OC1A)
 #define NOZZLE_REGISTER OCR1B
 #define BED_REGISTER OCR1A
 
@@ -51,7 +51,7 @@
 #define SIZE_X_MM 200
 #define SIZE_Y_MM 200
 #define SIZE_Z_MM 200
-//PINS
+// PINS
 
 #define EndStopsAndAnableStepsDDR DDRB
 #define EndStopsAndAnableStepsPORT PORTB
@@ -66,11 +66,11 @@
 
 #define TermisterNozzle PA0
 #define TermisterBed PA1
-    
-//STEP Driver
-#define AXES_DDR   DDRC
-#define AXES_PORT  PORTC
-#define X_DIR_PORT PORTC0 
+
+// STEP Driver
+#define AXES_DDR DDRC
+#define AXES_PORT PORTC
+#define X_DIR_PORT PORTC0
 #define Y_DIR_PORT PORTC2
 #define Z_DIR_PORT PORTC4
 #define E_DIR_PORT PORTC6
@@ -80,26 +80,20 @@
 #define Z_STEP_PORT PORTC5
 #define E_STEP_PORT PORTC7
 
-
 #define INVERT_X 0
 #define INVERT_Y 0
 #define INVERT_Z 0
 #define INVERT_E 0
 
-
 #define INVERT_X_EDNSTOPS 0
 #define INVERT_Y_EDNSTOPS 0
 #define INVERT_Z_EDNSTOPS 0
 
-
-//PID
+// PID
 #define PID_CALIB_TIME_S 180
 
-//OPTIONAL
-#define BoozerUsed 
-#define ScreenUsed 
-
-
-
+// OPTIONAL
+#define BoozerUsed
+#define ScreenUsed
 
 #endif

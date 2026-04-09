@@ -18,7 +18,7 @@ volatile uint16_t StepsSleepTimeout = 0;
 volatile uint16_t HomePositionTimeout = 0;
 volatile uint16_t CheckTempTimeout = 0;
 volatile uint8_t UATRTimeOut = 0;
-volatile uint16_t PID_CALIB_TIME = 0;
+// volatile uint16_t PID_CALIB_TIME = 0;
 volatile uint8_t ProgramPWM = 0;
 
 const float ticksInSecond = (1 / (((float)255 * (float)1024) / F_CPU));
@@ -28,8 +28,8 @@ void setup_printer() {
     UART_init(BaudRate);
     UART_set_call_back_RX(add_in_buffer);
     // memset(iPrinter,0,sizeof(ThreeD_Printer));
-    // iPrinter.NozzlePID = new_PIDR(3.0, 0.4, 2.0, &NOZZLE_REGISTER);
-    // iPrinter.BedPID = new_PIDR(3.0, 0.3, 2.0, &BED_REGISTER);
+    NewData(&iPrinter.NozzlePID, 20.0, 0.2, 0.0, &NOZZLE_REGISTER);
+    NewData(&iPrinter.BedPID, 40.0, 0.2, 0.0, &BED_REGISTER);
     iPrinter.flowrate = 100;
     iPrinter.feedrate = 100;
 
@@ -103,8 +103,7 @@ void setup_printer() {
 void printer_serve() {
     while (1) {
         if (!Buffio_isEmpty(&(iPrinter.buffio))) {
-            // log_information("Not is empty!");
-            // asm("nop");
+
             static char CurrentCommand[MaxCommandLen] = {};
             if (Buffio_ReadLine(&(iPrinter.buffio), CurrentCommand,
                                 sizeof(CurrentCommand), EndOfData) == -1) {
@@ -114,8 +113,6 @@ void printer_serve() {
             UART_send_command(EndOfData, ACK);
             UATRTimeOut = 0;
         } else {
-            // asm("nop");//Отче наш я же си на небеси. Да светится имя твое да
-            // будет царствие твое до будет воля твОя
             Await();
         }
     }
@@ -201,7 +198,7 @@ void execute_command(char *command) {
     }
 }
 
-void out_of_range(float X, float Y, float Z, float E) {
+void out_of_range(float X, float Y, float Z) {
     if ((iPrinter.CurrentPosition.X + X > SIZE_X_MM ||
          iPrinter.CurrentPosition.Y + Y > SIZE_Y_MM ||
          iPrinter.CurrentPosition.Z + Z > SIZE_Z_MM) ||
@@ -212,21 +209,47 @@ void out_of_range(float X, float Y, float Z, float E) {
     }
 }
 
+// uint8_t NozzleCounter = 0;
+// uint64_t adcNozzle = 0;
+
+// void ReadADCNozzle() {
+
+//     adcNozzle += ADC_read(TermisterNozzle);
+//     NozzleCounter++;
+// }
+
+int adc_avg = 0;
+int ReadADCNozzle() {
+
+    int new_adc = ADC_read(TermisterNozzle);
+    adc_avg = (adc_avg + new_adc) / 2;
+    return adc_avg;
+}
+int GetADCNozzle() {
+    // int res = adcNozzle / NozzleCounter;
+    // adcNozzle = 0;
+    // NozzleCounter = 0;
+    // return res;
+    return adc_avg;
+}
+
 void UpdateTemps() {
-    // iPrinter.tempBed    = convert_ADC_to_bed_temp(ADC_read(TermisterBed));
-    // iPrinter.tempNozzle =
-    // convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle));
-    iPrinter.tempBed =
-        (int)((float)iPrinter.tempBed * 0.8 +
-              (float)(convert_ADC_to_bed_temp(ADC_read(TermisterBed)) * 0.2));
-    iPrinter.tempNozzle =
-        (int)((float)iPrinter.tempNozzle * 0.8 +
-              (float)(convert_ADC_to_nozzle_temp(ADC_read(TermisterNozzle)) *
-                      0.2));
+
+    // log_information("ADC:%d", adcNozzle);
+    // log_information("ALGO:%d", get_temp_nozzle_algo(adcNozzle));
+    // log_information("Table:%d", convert_ADC_to_bed_temp(adcNozzle));
+
+    // iPrinter.tempNozzle = iPrinter.tempNozzle * (1.0f - 0.2) +
+    //                       get_temp_nozzle_algo(GetADCNozzle()) * 0.2;
+    iPrinter.tempBed = get_temp_bed_algo(ADC_read(BedThermistor));
+
+    // int adcBed = ADC_read(TermisterBed);
+    // iPrinter.tempBed = get_temp_bed_algo(adcBed);
 }
 
 ISR(TIMER0_COMP_vect) {
-    PID_CALIB_TIME++;
+    ReadADCNozzle();
+    // PID_CALIB_TIME++;
     StepsSleepTimeout++;
     HomePositionTimeout++;
     CheckTempTimeout++;
@@ -241,10 +264,15 @@ ISR(TIMER0_COMP_vect) {
         HomePositionTimeout / ticksInSecond >= HOME_POSITION_TIMEOUT_S) {
         panic("Home position time out!");
     }
-    if ((CheckTempTimeout / ticksInSecond) >= 1.0) {
+    if ((CheckTempTimeout / ticksInSecond) * 100 >= 10.0) {
         UpdateTemps();
         CheckTempTimeout = 0;
-        PIDR_calculate_new_value(&iPrinter.NozzlePID, iPrinter.tempNozzle,
+
+        int Nozzletemp = get_temp_nozzle_algo(GetADCNozzle());
+        iPrinter.tempNozzle =
+            iPrinter.tempNozzle * (1.0f - 0.2) + Nozzletemp * 0.2;
+
+        PIDR_calculate_new_value(&iPrinter.NozzlePID, Nozzletemp,
                                  ((float)CheckTempTimeout / ticksInSecond));
         PIDR_calculate_new_value(&iPrinter.BedPID, iPrinter.tempBed,
                                  ((float)CheckTempTimeout / ticksInSecond));
@@ -469,6 +497,8 @@ void home_position() { // todo
 
 void move(float X, float Y, float Z, float E, float speedMMS) {
 
+    // iPrinter.speed
+    //     log_success("move");
     iPrinter.Steps.nowXsteps = float_to_step(X, X_STEPS_MM);
     iPrinter.Steps.nowYsteps = float_to_step(Y, Y_STEPS_MM);
     iPrinter.Steps.nowZsteps = float_to_step(Z, Z_STEPS_MM);
@@ -500,6 +530,7 @@ void move(float X, float Y, float Z, float E, float speedMMS) {
     // log_information("Z_Timer_Register:%d",Z_Timer_Register);
     // log_information("E_Timer_Register:%d",E_Timer_Register);
     // log_information("iPrinter.Steps.speedAtZ:%d",iPrinter.Steps.speedAtZ);
+    out_of_range(X, Y, Z);
     if (stepTimersNull()) {
         log_warning("Null steps value!");
         return;
@@ -519,6 +550,7 @@ void move(float X, float Y, float Z, float E, float speedMMS) {
     iPrinter.CurrentPosition.Y += Y;
     iPrinter.CurrentPosition.Z += Z;
     iPrinter.CurrentPosition.E += E;
+    //     log_warning("EM");
 }
 
 uint8_t stepTimersNull() {
@@ -589,31 +621,33 @@ inline void execute_GCode(const char *command) {
     int gcode;
     if (sscanf(command, "G%d", &gcode) == 1) {
         switch (gcode) {
-        case 0:
+        case G0:
             command_G0(command);
             break;
-        case 1:
+        case G1:
             command_G1(command);
             break;
-        case 4:
+        case G4:
             command_G4(command);
             break;
-        case 10:
+        case G10:
             Command_G10(command);
             break;
-        case 11:
+        case G11:
             Command_G11(command);
             break;
-        case 28:
+        case G21:
+            break;
+        case G28:
             home_position();
             break;
-        case 90:
+        case G90:
             Command_G90();
             break;
-        case 91:
+        case G91:
             Command_G91();
             break;
-        case 92:
+        case G92:
             Command_G92(command);
             break;
 
@@ -621,52 +655,6 @@ inline void execute_GCode(const char *command) {
             log_warning("command not defined:%s", command);
         }
     }
-
-    // return;
-    //      if (!strcasestr(command, G0))
-    //      {
-    //           command_G0(command);
-    //      }
-    //      else if (!strcasestr(command, G1))
-    //      {
-    //           UART_send_message("command_G1");
-    //           command_G1(command);
-    //      }
-    //      else if (!strcasestr(command, G4))
-    //      {
-    //           UART_send_message("command_G4");
-    //           command_G4(command);
-    //      }
-    //      else if (!strcasestr(command, G10))
-    //      {
-    //           UART_send_message("Command_G10");
-    //           Command_G10(command);
-    //      }
-    //      else if (!strcasestr(command, G11))
-    //      {
-    //           UART_send_message("Command_G11");
-    //           Command_G11(command);
-    //      }
-    //      else if (!strcasestr(command, G28))
-    //      {
-    //           UART_send_message("command_G28");
-    //           home_position();
-    //      }
-    //      else if (!strcasestr(command, G90))
-    //      {
-    //           UART_send_message("command_90");
-    //           Command_G90();
-    //      }
-    //      else if (!strcasestr(command, G91))
-    //      {
-    //           UART_send_message("command_G91");
-    //           Command_G91();
-    //      }
-    //      else if (!strcasestr(command, G92))
-    //      {
-    //           UART_send_message("command_G92");
-    //           Command_G92(command);
-    //      }
 }
 
 inline void execute_MCode(const char *command) {
@@ -748,6 +736,8 @@ inline void execute_MCode(const char *command) {
         break;
     case M205:
         break;
+    case M900: // todo
+        break;
     default:
         log_warning("command not defined:%s", command);
         // log_warning("Current code:%d",MCode);
@@ -763,31 +753,31 @@ float get_extruder_move(float nowMove) {
 }
 
 inline void heat_bed_command(const char *command, uint8_t wait) {
-    float tempBed = 0;
+    int tempBed = 0;
     while (*command != '\0') {
         if (*command == 'S' || *command == 's') {
-            // tempBed = parse_GCode_from_string(command + 1);
+            tempBed = parse_GCode_from_string(command + 1);
             tempBed = strtof(++command, NULL);
             break;
         }
         command++;
     }
-    PIDR_set_need_value(&iPrinter.BedPID, tempBed);
+    set_temp_bed(tempBed);
     while ((wait) && (iPrinter.tempBed < tempBed)) {
         Await();
     }
 }
 
 inline void heat_nozzle_command(const char *command, uint16_t wait) {
-    float NozzleTemp = 0;
+    int NozzleTemp = 0;
     while (*command != '\0') {
         if (*command == 'S' || *command == 's') {
-            NozzleTemp = strtof(++command, NULL);
+            NozzleTemp = (int)parse_GCode_from_string(command + 1);
             break;
         }
         command++;
     }
-    PIDR_set_need_value(&iPrinter.NozzlePID, NozzleTemp);
+    set_temp_nozzle(NozzleTemp);
     while (wait && iPrinter.tempNozzle < NozzleTemp) {
         Await();
     }
@@ -878,6 +868,11 @@ inline void blickLight(uint8_t R, uint8_t G, uint8_t B) {
 // }
 
 void stop_print() {
+    DDRA = 0;
+    DDRB = 0;
+    DDRC = 0;
+    DDRD = 0;
+    cli();
     stop_axes_timer();
     GICR &= ~(1 << INT1);
     disable_steps();
