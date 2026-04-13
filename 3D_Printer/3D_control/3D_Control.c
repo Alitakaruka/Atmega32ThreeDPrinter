@@ -133,6 +133,7 @@ void set_light(uint8_t R, uint8_t G, uint8_t B) {
         ws2812_sendarray((uint8_t *)led, 3);
     }
 }
+
 void execute_command(char *command) {
     if ((iPrinter.Flags & (1 << FlagDebug)) != 0) {
         log_information("Start executing command:%s", command);
@@ -209,29 +210,13 @@ void out_of_range(float X, float Y, float Z) {
     }
 }
 
-// uint8_t NozzleCounter = 0;
-// uint64_t adcNozzle = 0;
-
-// void ReadADCNozzle() {
-
-//     adcNozzle += ADC_read(TermisterNozzle);
-//     NozzleCounter++;
-// }
-
-int adc_avg = 0;
 int ReadADCNozzle() {
-
+    static int adc_avg = 0;
     int new_adc = ADC_read(TermisterNozzle);
-    adc_avg = (adc_avg + new_adc) / 2;
+    adc_avg = (adc_avg * 3 + new_adc) / 4;
     return adc_avg;
 }
-int GetADCNozzle() {
-    // int res = adcNozzle / NozzleCounter;
-    // adcNozzle = 0;
-    // NozzleCounter = 0;
-    // return res;
-    return adc_avg;
-}
+
 
 void UpdateTemps() {
 
@@ -266,6 +251,7 @@ ISR(TIMER0_COMP_vect) {
     }
     if ((CheckTempTimeout / ticksInSecond) * 100 >= 10.0) {
         UpdateTemps();
+        ReadADCNozzle();
         CheckTempTimeout = 0;
 
         int Nozzletemp = get_temp_nozzle_algo(GetADCNozzle());
@@ -298,6 +284,7 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 ISR(TIMER2_COMP_vect) {
+
     TCNT1A_X++;
     TCNT1B_Y++;
     TCNT1C_Z++;

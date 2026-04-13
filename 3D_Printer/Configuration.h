@@ -48,9 +48,9 @@
 #define FAN1_CONTROL_PIN PD6
 #define FAN2_CONTROL_PIN PD7
 
-#define SIZE_X_MM 200
-#define SIZE_Y_MM 200
-#define SIZE_Z_MM 200
+#define SIZE_X_MM 220
+#define SIZE_Y_MM 220
+#define SIZE_Z_MM 250
 // PINS
 
 #define EndStopsAndAnableStepsDDR DDRB

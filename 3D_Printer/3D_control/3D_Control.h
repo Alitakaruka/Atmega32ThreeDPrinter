@@ -15,7 +15,7 @@
 #include <util/delay.h>
 
 #define AXES_TIMER_PRESCALER 256
-#define STEP_TIMER_UNIT 2
+#define STEP_TIMER_UNIT 128
 
 #define X_Timer_Register OCR1AA_X
 #define Y_Timer_Register OCR1AB_Y
