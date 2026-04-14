@@ -60,9 +60,13 @@ static inline void init_axes_timer() {
 unsigned int get_delay_timer(float speed, int speedAt);
 uint8_t stepTimersNull();
 // Move
-static inline int float_to_step(float distance_MM, int stepByMM) {
-    return round(distance_MM * stepByMM);
+static inline uint32_t abs32(int32_t v){
+    return v > 0 ? v : -v;
 }
+static inline uint32_t float_to_step(float distance_MM, int stepByMM) {
+    return abs32(round(distance_MM * (uint32_t) stepByMM));
+}
+
 void move_to(float X, float Y, float Z, float E, int speedMMS);
 void move(float X, float Y, float Z, float E, float speedMMS);
 
@@ -82,10 +86,10 @@ extern inline void set_temp_bed(uint8_t temp);
 extern inline void set_temp_nozzle(int temp);
 uint16_t read_adc(uint8_t channel);
 
-void handle_X();
-void handle_Y();
-void handle_E();
-void handle_Z();
+inline void handle_X();
+inline void handle_Y();
+inline void handle_E();
+inline void handle_Z();
 
 // extern inline void clear_RX();
 
@@ -206,7 +210,7 @@ static inline void command_G1(const char *command) {
     }
     //     E = E* ((float)(iPrinter.flowrate)/ 100.0f);
 
-    //     log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f", X, Y, Z, E, F);
+    // log_information("X:%f, Y:%f, Z:%f, E:%f, F:%f", X, Y, Z, E, F);
 
     if (X != 0 || Y != 0 || Z != 0 || E != 0) {
         move(X, Y, Z, E, F);

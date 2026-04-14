@@ -28,8 +28,8 @@
 // STEPS TO MM
 #define X_STEPS_MM 160 // old is 160
 #define Y_STEPS_MM 160 // old is 160
-#define Z_STEPS_MM 400
-#define E_STEPS_MM 500
+#define Z_STEPS_MM 800
+#define E_STEPS_MM 202
 #define STEPS_TIMEOUT_S 60
 #define HOME_POSITION_TIMEOUT_S 10
 //

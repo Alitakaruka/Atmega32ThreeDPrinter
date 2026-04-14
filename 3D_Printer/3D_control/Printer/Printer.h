@@ -32,11 +32,16 @@ static Settings EEMEM settings_eeprom;
 static BaseSettings EEMEM BaseSettings_eeprom;
 
 typedef struct Steps {
-    volatile int nowXsteps;
-    volatile int nowYsteps;
-    volatile int nowZsteps;
-    volatile int nowEsteps;
+    volatile uint32_t CurrentXsteps;
+    volatile uint32_t CurrentYsteps;
+    volatile uint32_t CurrentZsteps;
+    volatile uint32_t CurrentEsteps;
 
+    uint8_t motionX;
+    uint8_t motionY;
+    uint8_t motionZ;
+    uint8_t motionE;
+    
     int speedAtX;
     int speedAtY;
     int speedAtZ;

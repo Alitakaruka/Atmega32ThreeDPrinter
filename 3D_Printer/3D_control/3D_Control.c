@@ -25,11 +25,15 @@ const float ticksInSecond = (1 / (((float)255 * (float)1024) / F_CPU));
 
 void setup_printer() {
 
+    //disable Jtag
+    MCUCSR |= (1 << JTD);
+    MCUCSR |= (1 << JTD);
+
     UART_init(BaudRate);
     UART_set_call_back_RX(add_in_buffer);
     // memset(iPrinter,0,sizeof(ThreeD_Printer));
     NewData(&iPrinter.NozzlePID, 20.0, 0.2, 0.0, &NOZZLE_REGISTER);
-    NewData(&iPrinter.BedPID, 40.0, 0.2, 0.0, &BED_REGISTER);
+    NewData(&iPrinter.BedPID, 40.0, 1.0, 0.0, &BED_REGISTER);
     iPrinter.flowrate = 100;
     iPrinter.feedrate = 100;
 
@@ -58,17 +62,17 @@ void setup_printer() {
     LedPort |= (1 << LedPin);
     // Max time interval for timer and max speed
     iPrinter.Steps.speedAtY =
-       F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
+       F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / Y_STEPS_MM;
         iPrinter.settings.steps_to_mm_Y;
     iPrinter.Steps.speedAtX =
-       F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
-        iPrinter.settings.steps_to_mm_X;
+       F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / X_STEPS_MM;
+        // iPrinter.settings.steps_to_mm_X;
     iPrinter.Steps.speedAtE =
-        F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
-        iPrinter.settings.steps_to_mm_E;
+        F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / E_STEPS_MM;
+        // iPrinter.settings.steps_to_mm_E;
     iPrinter.Steps.speedAtZ =
-        F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
-        iPrinter.settings.steps_to_mm_Z;
+        F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /Z_STEPS_MM;
+        // iPrinter.settings.steps_to_mm_Z;
     iPrinter.speed = StandartSpeed;
 
     ADC_Init();
@@ -251,10 +255,10 @@ ISR(TIMER0_COMP_vect) {
     }
     if ((CheckTempTimeout / ticksInSecond) * 100 >= 10.0) {
         UpdateTemps();
-        
+       
         CheckTempTimeout = 0;
 
-        int Nozzletemp = get_temp_nozzle_algo(ReadADCNozzle());
+        int Nozzletemp = get_temp_nozzle_algo( ReadADCNozzle());
         iPrinter.tempNozzle =
             iPrinter.tempNozzle * (1.0f - 0.2) + Nozzletemp * 0.2;
 
@@ -326,38 +330,45 @@ void stop_axes_timer() {
 void start_axes_timer() { TIMSK |= (1 << OCIE1A); }
 
 void handle_Y() {
-    if (iPrinter.Steps.nowYsteps == 0) {
+    if (iPrinter.Steps.CurrentYsteps == 0) {
         return;
     }
-    iPrinter.Steps.nowYsteps--;
-    // iPrinter.Flags &= ~(1 << FlagYstep);
+    iPrinter.Steps.CurrentYsteps--;
+    iPrinter.CurrentPosition.Y = iPrinter.Steps.motionY ? iPrinter.CurrentPosition.Y + MM_Y : iPrinter.CurrentPosition.Y - MM_Y;
     AXES_PORT ^= (1 << Y_STEP_PORT);
 }
 
 void handle_E() {
-    if (iPrinter.Steps.nowEsteps == 0) {
+    if (iPrinter.Steps.CurrentEsteps == 0) {
         return;
     }
-    iPrinter.Steps.nowEsteps--;
+    iPrinter.Steps.CurrentEsteps--;
     // iPrinter.Flags &= ~(1 << FlagEstep);
+        iPrinter.CurrentPosition.E = iPrinter.Steps.motionE ? iPrinter.CurrentPosition.E + MM_E : iPrinter.CurrentPosition.E - MM_E;
+
+
     AXES_PORT ^= (1 << E_STEP_PORT);
 }
 
 void handle_Z() {
-    if (iPrinter.Steps.nowZsteps == 0) {
+    if (iPrinter.Steps.CurrentZsteps == 0) {
         return;
     }
-    iPrinter.Steps.nowZsteps--;
+    iPrinter.Steps.CurrentZsteps--;
     // iPrinter.Flags &= ~(1 << FlagZstep);
+        iPrinter.CurrentPosition.Z = iPrinter.Steps.motionZ ? iPrinter.CurrentPosition.Z + MM_Z : iPrinter.CurrentPosition.Z - MM_Z;
+
     AXES_PORT ^= (1 << Z_STEP_PORT);
 }
 
 void handle_X() {
-    if (iPrinter.Steps.nowXsteps == 0) {
+    if (iPrinter.Steps.CurrentXsteps == 0) {
         return;
     }
-    iPrinter.Steps.nowXsteps--;
+    iPrinter.Steps.CurrentXsteps--;
     // iPrinter.Flags &= ~(1 << FlagXstep);
+    iPrinter.CurrentPosition.X = iPrinter.Steps.motionX ? iPrinter.CurrentPosition.X + MM_X : iPrinter.CurrentPosition.X - MM_X;
+
     AXES_PORT ^= (1 << X_STEP_PORT);
 }
 
@@ -372,6 +383,10 @@ unsigned int get_delay_timer(float speed, int speedAt) {
 
 void set_dir_port_state(uint8_t XDir, uint8_t YDir, uint8_t ZDir,
                         uint8_t EDir) {
+                            iPrinter.Steps.motionX = XDir;
+                            iPrinter.Steps.motionY = YDir;
+                            iPrinter.Steps.motionZ = ZDir;
+                            iPrinter.Steps.motionE = EDir;
     // Reset dirs
     AXES_PORT = AXES_PORT & ((1 << X_STEP_PORT) | (1 << Y_STEP_PORT) |
                              (1 << Z_STEP_PORT) | (1 << E_STEP_PORT));
@@ -408,25 +423,12 @@ void set_dir_port_state(uint8_t XDir, uint8_t YDir, uint8_t ZDir,
 #endif
 }
 
-void bring_steps_to_format() {
-    // iPrinter.Steps.nowEsteps = iPrinter.Steps.nowXsteps < 0 ?
-    // -iPrinter.Steps.nowXsteps
-    if (iPrinter.Steps.nowXsteps < 0)
-        iPrinter.Steps.nowXsteps = -iPrinter.Steps.nowXsteps;
-    if (iPrinter.Steps.nowYsteps < 0)
-        iPrinter.Steps.nowYsteps = -iPrinter.Steps.nowYsteps;
-    if (iPrinter.Steps.nowEsteps < 0)
-        iPrinter.Steps.nowEsteps = -iPrinter.Steps.nowEsteps;
-    if (iPrinter.Steps.nowZsteps < 0)
-        iPrinter.Steps.nowZsteps = -iPrinter.Steps.nowZsteps;
-}
-
 void home_position() { // todo
     // reset steps
-    iPrinter.Steps.nowXsteps = 0;
-    iPrinter.Steps.nowYsteps = 0;
-    iPrinter.Steps.nowZsteps = 0;
-    iPrinter.Steps.nowEsteps = 0;
+    iPrinter.Steps.CurrentXsteps = 0;
+    iPrinter.Steps.CurrentYsteps = 0;
+    iPrinter.Steps.CurrentZsteps = 0;
+    iPrinter.Steps.CurrentZsteps = 0;
     // TIMSK |= (1 << OCIE0) | (1 << OCIE1A); // turn on timers
     enable_steps();
     start_axes_timer();
@@ -437,12 +439,12 @@ void home_position() { // todo
     iPrinter.Flags |= (1 << FlagIMove) | (1 << FlagGoHome);
 #if INVERT_X_EDNSTOPS == 1
     while ((EndStopsAndAnableStepsPIN & (1 << EndstopX)) == 0) {
-        iPrinter.Steps.nowXsteps = 1;
+        iPrinter.Steps.CurrentXsteps = 1;
         Await();
     }
 #else
     while ((EndStopsAndAnableStepsPIN & (1 << EndstopX)) != 0) {
-        iPrinter.Steps.nowXsteps = 1;
+        iPrinter.Steps.CurrentXsteps = 1;
         Await();
     }
 #endif
@@ -451,12 +453,12 @@ void home_position() { // todo
     Y_Timer_Register = get_delay_timer(StandartSpeed, iPrinter.Steps.speedAtY);
 #if INVERT_Y_EDNSTOPS == 1
     while ((EndStopsAndAnableStepsPIN & (1 << EndstopY)) == 0) {
-        iPrinter.Steps.nowYsteps = 1;
+        iPrinter.Steps.CurrentYsteps = 1;
         Await();
     }
 #else
     while ((EndStopsAndAnableStepsPIN & (1 << EndstopY)) != 0) {
-        iPrinter.Steps.nowYsteps = 1;
+        iPrinter.Steps.CurrentYsteps = 1;
         Await();
     }
 #endif
@@ -465,12 +467,12 @@ void home_position() { // todo
     Z_Timer_Register = get_delay_timer(StandartSpeed, iPrinter.Steps.speedAtZ);
 #if INVERT_Z_EDNSTOPS == 1
     while ((EndStopsAndAnableStepsPIN & (1 << EndstopZ)) == 0) {
-        iPrinter.Steps.nowZsteps = 1;
+        iPrinter.Steps.CurrentZsteps = 1;
         Await();
     }
 #else
     while ((EndStopsAndAnableStepsPIN & (1 << EndstopZ)) != 0) {
-        iPrinter.Steps.nowZsteps = 1;
+        iPrinter.Steps.CurrentZsteps = 1;
         Await();
     }
 #endif
@@ -486,12 +488,12 @@ void move(float X, float Y, float Z, float E, float speedMMS) {
 
     // iPrinter.speed
     //     log_success("move");
-    iPrinter.Steps.nowXsteps = float_to_step(X, X_STEPS_MM);
-    iPrinter.Steps.nowYsteps = float_to_step(Y, Y_STEPS_MM);
-    iPrinter.Steps.nowZsteps = float_to_step(Z, Z_STEPS_MM);
-    iPrinter.Steps.nowEsteps = float_to_step(E, E_STEPS_MM);
+    iPrinter.Steps.CurrentXsteps = float_to_step(X, X_STEPS_MM);
+    iPrinter.Steps.CurrentYsteps = float_to_step(Y, Y_STEPS_MM);
+    iPrinter.Steps.CurrentZsteps = float_to_step(Z, Z_STEPS_MM);
+    iPrinter.Steps.CurrentEsteps = float_to_step(E, E_STEPS_MM);
+
     set_dir_port_state(X > 0.0001f, Y > 0.0001f, Z > 0.0001f, E > 0.0001f);
-    bring_steps_to_format();
     // The resulting vector is calculated using the Pythagorean theorem from the
     // previous vectors.
     float resVecXYZE = sqrtf(((sque(X) + sque(Y)) + sque(Z)) + sque(E));
@@ -526,31 +528,31 @@ void move(float X, float Y, float Z, float E, float speedMMS) {
     enable_steps();
     start_axes_timer();
     iPrinter.Flags |= (1 << FlagIMove);
-    while (iPrinter.Steps.nowXsteps != 0 || iPrinter.Steps.nowYsteps != 0 ||
-           iPrinter.Steps.nowEsteps != 0 || iPrinter.Steps.nowZsteps != 0) {
+    while (iPrinter.Steps.CurrentXsteps != 0 || iPrinter.Steps.CurrentYsteps != 0 ||
+           iPrinter.Steps.CurrentEsteps != 0 || iPrinter.Steps.CurrentZsteps != 0) {
         Await();
     }
     stop_axes_timer();
     iPrinter.Flags &= ~(1 << FlagIMove);
 
-    iPrinter.CurrentPosition.X += X;
-    iPrinter.CurrentPosition.Y += Y;
-    iPrinter.CurrentPosition.Z += Z;
-    iPrinter.CurrentPosition.E += E;
+    // iPrinter.CurrentPosition.X += X;
+    // iPrinter.CurrentPosition.Y += Y;
+    // iPrinter.CurrentPosition.Z += Z;
+    // iPrinter.CurrentPosition.E += E;
     //     log_warning("EM");
 }
 
 uint8_t stepTimersNull() {
-    if (iPrinter.Steps.nowXsteps && (X_Timer_Register == 0)) {
+    if (iPrinter.Steps.CurrentXsteps && (X_Timer_Register == 0)) {
         return 1;
     }
-    if (iPrinter.Steps.nowYsteps && (Y_Timer_Register == 0)) {
+    if (iPrinter.Steps.CurrentYsteps && (Y_Timer_Register == 0)) {
         return 1;
     }
-    if (iPrinter.Steps.nowZsteps && (Z_Timer_Register == 0)) {
+    if (iPrinter.Steps.CurrentZsteps && (Z_Timer_Register == 0)) {
         return 1;
     }
-    if (iPrinter.Steps.nowEsteps && (E_Timer_Register == 0)) {
+    if (iPrinter.Steps.CurrentEsteps && (E_Timer_Register == 0)) {
         return 1;
     }
     return 0;

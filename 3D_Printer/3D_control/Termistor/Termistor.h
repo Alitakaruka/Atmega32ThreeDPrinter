@@ -194,7 +194,8 @@
 #if NozzleThetmistor == TERMISTER_NTC100k
 
 #define ADC_MAX 1023.0
-#define R_FIXED 1000.0 // 100k resistor
+#define R_FIXED_Nozzle 9400.0 // 100k resistor
+#define R_FIXED_BED 9900.0 // 100k resistor
 #define R0 100000.0      // NTC at 25°C
 #define T0 298.15        // 25°C in Kelvin
 #define BETA 3950.0      // Beta coefficient
@@ -209,7 +210,7 @@ static int get_temp_nozzle_algo(uint16_t adc) {
     }
 
     // 1. Считаем сопротивление термистора
-    float r_ntc = R_FIXED * ((ADC_MAX / (float)adc) - 1.0);
+    float r_ntc = R_FIXED_Nozzle * ((ADC_MAX / (float)adc) - 1.0);
     // 2. Формула Бета
     float tempK = 1.0 / ((1.0 / T0) + (1.0 / BETA) * log(r_ntc / R0));
 
@@ -304,7 +305,7 @@ static int get_temp_bed_algo(uint16_t adc) {
     }
 
     // 1. Считаем сопротивление термистора
-    float r_ntc = R_FIXED * ((ADC_MAX / (float)adc) - 1.0);
+    float r_ntc = R_FIXED_BED * ((ADC_MAX / (float)adc) - 1.0);
     // 2. Формула Бета
     float tempK = 1.0 / ((1.0 / T0) + (1.0 / BETA) * log(r_ntc / R0));
 
