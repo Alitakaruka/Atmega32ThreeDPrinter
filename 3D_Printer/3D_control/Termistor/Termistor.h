@@ -194,7 +194,7 @@
 #if NozzleThetmistor == TERMISTER_NTC100k
 
 #define ADC_MAX 1023.0
-#define R_FIXED 100000.0 // 100k resistor
+#define R_FIXED 1000.0 // 100k resistor
 #define R0 100000.0      // NTC at 25°C
 #define T0 298.15        // 25°C in Kelvin
 #define BETA 3950.0      // Beta coefficient

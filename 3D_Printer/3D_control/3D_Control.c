@@ -251,10 +251,10 @@ ISR(TIMER0_COMP_vect) {
     }
     if ((CheckTempTimeout / ticksInSecond) * 100 >= 10.0) {
         UpdateTemps();
-        ReadADCNozzle();
+        
         CheckTempTimeout = 0;
 
-        int Nozzletemp = get_temp_nozzle_algo(GetADCNozzle());
+        int Nozzletemp = get_temp_nozzle_algo(ReadADCNozzle());
         iPrinter.tempNozzle =
             iPrinter.tempNozzle * (1.0f - 0.2) + Nozzletemp * 0.2;
 
