@@ -58,16 +58,16 @@ void setup_printer() {
     LedPort |= (1 << LedPin);
     // Max time interval for timer and max speed
     iPrinter.Steps.speedAtY =
-        (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) /
+       F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
         iPrinter.settings.steps_to_mm_Y;
     iPrinter.Steps.speedAtX =
-        (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) /
+       F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
         iPrinter.settings.steps_to_mm_X;
     iPrinter.Steps.speedAtE =
-        (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) /
+        F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
         iPrinter.settings.steps_to_mm_E;
     iPrinter.Steps.speedAtZ =
-        (1 / (((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) / F_CPU)) /
+        F_CPU / ((float)AXES_TIMER_PRESCALER * STEP_TIMER_UNIT) /
         iPrinter.settings.steps_to_mm_Z;
     iPrinter.speed = StandartSpeed;
 
