@@ -204,12 +204,33 @@ void execute_command(char *command) {
 }
 
 void out_of_range(float X, float Y, float Z) {
-    if ((iPrinter.CurrentPosition.X + X > SIZE_X_MM ||
-         iPrinter.CurrentPosition.Y + Y > SIZE_Y_MM ||
-         iPrinter.CurrentPosition.Z + Z > SIZE_Z_MM) ||
-        (iPrinter.CurrentPosition.X + X < 0 ||
-         iPrinter.CurrentPosition.Y + Y < 0 ||
-         iPrinter.CurrentPosition.Z + Z < 0)) {
+    if(iPrinter.CurrentPosition.X < 0){
+        iPrinter.CurrentPosition.X = 0;
+    }
+    if(iPrinter.CurrentPosition.X > SIZE_X_MM){
+        iPrinter.CurrentPosition.X = SIZE_X_MM;
+    }
+
+    if(iPrinter.CurrentPosition.Y < 0){
+        iPrinter.CurrentPosition.Y = 0;
+    }
+    if(iPrinter.CurrentPosition.Y > SIZE_Y_MM){
+        iPrinter.CurrentPosition.Y = SIZE_Y_MM;
+    }
+
+    if(iPrinter.CurrentPosition.Z < 0){
+        iPrinter.CurrentPosition.Z = 0;
+    }
+    if(iPrinter.CurrentPosition.Z > SIZE_Z_MM){
+        iPrinter.CurrentPosition.Z = SIZE_Z_MM;
+    }
+
+    if ((iPrinter.CurrentPosition.X + X > SIZE_X_MM + Epsilon||
+         iPrinter.CurrentPosition.Y + Y > SIZE_Y_MM + Epsilon||
+         iPrinter.CurrentPosition.Z + Z > SIZE_Z_MM + Epsilon) ||
+        (iPrinter.CurrentPosition.X + X < -Epsilon ||
+         iPrinter.CurrentPosition.Y + Y < -Epsilon ||
+         iPrinter.CurrentPosition.Z + Z < -Epsilon)) {
         panic("Out of range!");
     }
 }
@@ -497,22 +518,25 @@ void move(float X, float Y, float Z, float E, float speedMMS) {
     // The resulting vector is calculated using the Pythagorean theorem from the
     // previous vectors.
     float resVecXYZE = sqrtf(((sque(X) + sque(Y)) + sque(Z)) + sque(E));
+    float MaxSpeed = sqrtf(2 * speedMMS * resVecXYZE);
+
+
     // log_information("resVecXYZE:%f",resVecXYZE);
     if (resVecXYZE < 0.0001f) {
         log_warning("Null steps value!");
         return;
     }
-    if (speedMMS > MaxSpeedMMS) {
-        speedMMS = MaxSpeedMMS;
+    if (MaxSpeed > MaxSpeedMMS) {
+        MaxSpeed = MaxSpeedMMS;
     }
     Y_Timer_Register =
-        get_delay_timer((Y * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtY);
+        get_delay_timer((Y * MaxSpeed) / resVecXYZE, iPrinter.Steps.speedAtY);
     X_Timer_Register =
-        get_delay_timer((X * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtX);
+        get_delay_timer((X * MaxSpeed) / resVecXYZE, iPrinter.Steps.speedAtX);
     Z_Timer_Register =
-        get_delay_timer((Z * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtZ);
+        get_delay_timer((Z * MaxSpeed) / resVecXYZE, iPrinter.Steps.speedAtZ);
     E_Timer_Register =
-        get_delay_timer((E * speedMMS) / resVecXYZE, iPrinter.Steps.speedAtE);
+        get_delay_timer((E * MaxSpeed) / resVecXYZE, iPrinter.Steps.speedAtE);
 
     // log_information("Y_Timer_Register:%d",Y_Timer_Register);
     // log_information("X_Timer_Register:%d",X_Timer_Register);

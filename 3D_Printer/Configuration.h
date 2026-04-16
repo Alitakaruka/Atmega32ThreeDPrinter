@@ -29,7 +29,7 @@
 #define X_STEPS_MM 160 // old is 160
 #define Y_STEPS_MM 160 // old is 160
 #define Z_STEPS_MM 800
-#define E_STEPS_MM 202
+#define E_STEPS_MM 200
 #define STEPS_TIMEOUT_S 60
 #define HOME_POSITION_TIMEOUT_S 10
 //
@@ -82,7 +82,7 @@
 
 #define INVERT_X 0
 #define INVERT_Y 0
-#define INVERT_Z 0
+#define INVERT_Z 1
 #define INVERT_E 0
 
 #define INVERT_X_EDNSTOPS 0
@@ -96,4 +96,5 @@
 #define BoozerUsed
 #define ScreenUsed
 
+#define Epsilon 0.01
 #endif
